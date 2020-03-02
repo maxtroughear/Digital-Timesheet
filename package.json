@@ -1,0 +1,23 @@
+{
+  "name": "digital-timesheet",
+  "version": "1.0.0",
+  "description": "A digital timesheet and project management application",
+  "main": "app.js",
+  "scripts": {
+	"test": "echo \"Error: no test specified\" && exit 1",
+	"start-dev": "nodemon app.js"
+  },
+  "author": "Max Troughear",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://git.maxtroughear.dev/max.troughear/digital-timesheet"
+  },
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}
