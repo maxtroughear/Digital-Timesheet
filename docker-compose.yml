@@ -1,0 +1,19 @@
+version: '3'
+services:
+  digital-timesheet:
+    depends_on: 
+      - redis
+      - mongo
+    environment:
+      MONGO_URI: 'mongodb://mongo:27017/digital-timesheet?retryWrites=true&w=majority'
+
+  redis:
+    image: redis:alpine
+
+  mongo:
+    image: mongo:latest
+    volumes:
+    - digital-timesheet-data:/data/db
+
+volumes:
+  digital-timesheet-data:

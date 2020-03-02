@@ -1,0 +1,14 @@
+version: '3'
+services:
+  digital-timesheet:
+    build: .
+    ports:
+      - 3000:3000
+      - 9229:9229
+    environment:
+      NODE_ENV: development
+    command: node --inspect=0.0.0.0:9229 app.js
+  
+  mongo:
+    ports:
+      - 27017:27017
