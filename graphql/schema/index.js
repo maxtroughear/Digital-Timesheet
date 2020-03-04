@@ -14,6 +14,7 @@ type Event {
 	description: String!
 	price: Float!
 	date: String!
+	creator: User!
 }
 
 input UserInput {
