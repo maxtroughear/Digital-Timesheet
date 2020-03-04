@@ -6,4 +6,4 @@ const rootResolver = {
 	...eventsResolver
 };
 
-exports = rootResolver;
+module.exports = rootResolver;

@@ -1,6 +1,5 @@
 const Event = require('../../models/event');
 const User = require('../../models/user');
-const { dateToString } = require('../../helpers/date');
 
 const events = async eventIds => {
 	try {
@@ -37,7 +36,7 @@ const user = async userId => {
 const transformEvent = event => {
 	return {
 		...event._doc,
-		date: dateToString(event._doc.date),
+		date: new Date(event._doc.date),
 		creator: user.bind(this, event.creator)
 	};
 };
