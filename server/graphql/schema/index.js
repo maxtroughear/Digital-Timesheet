@@ -3,7 +3,7 @@ const { buildSchema } = require('graphql');
 module.exports = buildSchema(`
 type User {
 	_id: ID!
-	userID: String!
+	username: String!
 	password: String
 	createdEvents: [Event!]
 }
@@ -17,8 +17,14 @@ type Event {
 	creator: User!
 }
 
+type AuthData {
+	userID: ID!
+	token: String!
+	tokenExpiration: Int!
+}
+
 input UserInput {
-	userID: String!
+	username: String!
 	password: String!
 }
 
@@ -31,6 +37,7 @@ input EventInput {
 
 type RootQuery {
 	events: [Event!]!
+	login(username: String!, password: String!): AuthData!
 }
 
 type RootMutation {

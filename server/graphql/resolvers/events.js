@@ -14,23 +14,22 @@ module.exports = {
 			throw err;
 	  	}
 	},
-	createEvent: async args => {
-		const creatorID = '5e6029d88d038c2fcaef1c5f';
+	createEvent: async (args, req) => {
+		if (!req.isAuth) {
+			throw new Error('Not authenticated');
+		}
 		const event = new Event({
 			title: args.eventInput.title,
 			description: args.eventInput.description,
 			price: +args.eventInput.price,
 			date: new Date(args.eventInput.date),
-			// TODO: charge hard coded creator ID
-			creator: creatorID
+			creator: req.userID
 		});
 		let createdEvent;
 		try {
 			const result = await event.save();
 			createdEvent = transformEvent(result);
-			// TODO: change hard coded creator ID
-			const creator = await User.findById(creatorID);
-	
+			const creator = await User.findById(req.userID);
 			if (!creator) {
 				throw new Error('User not found.');
 			}

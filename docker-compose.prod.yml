@@ -8,3 +8,4 @@ services:
       LETSENCRYPT_HOST: __VIRTUAL_HOST_SSL__
       PRODUCTION: true
       NODE_ENV: production
+      SECRET_KEY: __SECRET_KEY__

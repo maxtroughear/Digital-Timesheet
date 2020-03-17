@@ -21,11 +21,12 @@ const events = async eventIds => {
 // 	}
 // };
   
-const user = async userId => {
+const user = async username => {
 	try {
-	  	const user = await User.findById(userId);
+	  	const user = await User.findById(username);
 	  	return {
 			...user._doc,
+			password: null,
 			createdEvents: events.bind(this, user._doc.createdEvents)
 	  	};
 	} catch (err) {

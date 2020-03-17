@@ -1,12 +1,13 @@
 version: '3'
 services:
   digital-timesheet:
-    build: .
+    build: ./server
     ports:
       - 3000:3000
       - 9229:9229
     environment:
       NODE_ENV: development
+      SECRET_KEY: notasecretkey
     command: node --inspect=0.0.0.0:9229 app.js
   
   mongo:
