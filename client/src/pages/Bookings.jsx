@@ -1,6 +1,6 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 
-class BookingsPage extends Component {
+class BookingsPage extends PureComponent {
   render() {
     return <h1>The Bookings Page</h1>;
   }

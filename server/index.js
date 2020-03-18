@@ -35,7 +35,4 @@ const opts = {
 
 Server.start(opts, () => {
   logger.info(`Server is running on port: ${opts.port}`);
-  logger.warn(`Server is running on port: ${opts.port}`);
-  logger.error(`Server is running on port: ${opts.port}`);
-  logger.data(`Server is running on port: ${opts.port}`);
 });
