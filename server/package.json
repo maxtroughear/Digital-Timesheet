@@ -1,29 +1,24 @@
 {
-  "name": "digital-timesheet",
-  "version": "1.0.0",
-  "description": "A digital timesheet and project management application",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start-dev": "docker-compose -f docker-compose.yml -f docker-compose.debug.yml up --build -d ",
-    "start": "node app.js"
-  },
-  "author": "Max Troughear",
-  "license": "ISC",
-  "repository": {
-    "type": "git",
-    "url": "https://git.maxtroughear.dev/max.troughear/digital-timesheet"
-  },
-  "dependencies": {
-    "bcrypt": "^4.0.1",
-    "body-parser": "^1.19.0",
-    "express": "^4.17.1",
-    "express-graphql": "^0.9.0",
-    "graphql": "^14.6.0",
-    "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.9.2"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.2"
-  }
+	"name": "server",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"start": "node index.js",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"bcrypt": "^4.0.1",
+		"graphql-yoga": "^1.18.3",
+		"jsonwebtoken": "^8.5.1",
+		"mongoose": "^5.9.5",
+		"winston": "^3.2.1"
+	},
+	"devDependencies": {
+		"eslint": "^6.8.0",
+		"eslint-config-airbnb-base": "^14.1.0",
+		"eslint-plugin-import": "^2.20.1"
+	}
 }

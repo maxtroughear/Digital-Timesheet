@@ -1,11 +1,16 @@
 version: '3'
 services:
-  digital-timesheet:
+  api:
     depends_on: 
       - redis
       - mongo
     environment:
       MONGO_URI: 'mongodb://mongo:27017/digital-timesheet?retryWrites=true&w=majority'
+      REDIS_HOST: 'redis'
+
+  frontend:
+    depends_on: 
+      - api
 
   redis:
     image: redis:alpine

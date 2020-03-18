@@ -1,15 +1,26 @@
 version: '3'
 services:
-  digital-timesheet:
-    build: ./server
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
     ports:
       - 3000:3000
       - 9229:9229
     environment:
       NODE_ENV: development
-      SECRET_KEY: notasecretkey
-    command: node --inspect=0.0.0.0:9229 app.js
+      SECRET_TOKEN_KEY: notasecretkey
+    command: node --inspect=0.0.0.0:9229 index.js
   
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - 3001:3001
+    environment: 
+      NODE_ENV: development
+
   mongo:
     ports:
       - 27017:27017

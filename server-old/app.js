@@ -15,10 +15,17 @@ app.use(bodyParser.json());
 
 app.use(isAuth(process.env.SECRET_KEY));
 
-app.use('/graphql', graphqlHttp({
+app.use('/', graphqlHttp({
 	schema: graphqlSchema,
 	rootValue: graphQlResolvers(process.env.SECRET_KEY),
 	graphiql: true
+	// context: ({ req }) => {
+	// 	const token = req.get('Authorization') || '';
+
+	// 	const user = getUser(token);
+
+	// 	return { user };
+	// }
 }));
 
 mongoose.connect(process.env.MONGO_URI, {

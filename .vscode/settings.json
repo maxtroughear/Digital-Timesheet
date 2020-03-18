@@ -1,0 +1,10 @@
+{
+	"editor.codeActionsOnSave": {
+		"source.fixAll": true
+	},
+	"eslint.format.enable": true,
+	"eslint.workingDirectories": [
+		"client",
+		"server"
+	]
+}
