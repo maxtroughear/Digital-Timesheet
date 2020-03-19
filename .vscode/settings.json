@@ -6,5 +6,7 @@
 	"eslint.workingDirectories": [
 		"client",
 		"server"
-	]
+	],
+	"editor.insertSpaces": true,
+	"editor.tabSize": 2
 }

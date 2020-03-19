@@ -1,44 +1,31 @@
 type Query {
-	events: [Event!]!
-	login(username: String!, password: String!): AuthData!
+#	events: [Event!]!
+	login(companyCode: String!, username: String!, password: String!): AuthData!
 }
 
 type Mutation {
-	createEvent(eventInput: EventInput): Event
-	createUser(username: String!, password: String!): User
+#	createEvent(eventInput: EventInput): Event
+	createUser(code: String!, username: String!, password: String!): User
+	createCompany(name: String!, code: String!): Company
 }
 
 type User {
-	_id: ID!
+	company: Company!
 	username: String!
-	password: String
-	createdEvents: [Event!]
 }
 
-type Event {
-	_id: ID!
-	title: String!
-	description: String!
-	price: Float!
-	date: String!
-	creator: User!
+type Company {
+	name: String!
+	code: String!
 }
 
 type AuthData {
 	user: User
-	userId: ID!
 	token: String!
 	tokenExpiration: Int!
 }
 
 input UserInput {
+	companyCode: String!
 	username: String!
-	password: String!
-}
-
-input EventInput {
-	title: String!
-	description: String!
-	price: Float!
-	date: String!
 }
