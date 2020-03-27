@@ -159,7 +159,7 @@ review:
       mv docker-compose.yml $CI_PROJECT_PATH_SLUG-review-$CI_COMMIT_REF_NAME/docker-compose.yml;
       mv docker-compose.prod.yml $CI_PROJECT_PATH_SLUG-review-$CI_COMMIT_REF_NAME/docker-compose.prod.yml;
       cd $CI_PROJECT_PATH_SLUG-review-$CI_COMMIT_REF_NAME/;
-      docker-compose up -f docker-compose.yml -f docker-compose.prod.yml -d;
+      docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d;
       docker network connect ${CI_PROJECT_PATH_SLUG}-review-${CI_COMMIT_REF_NAME}_default nginx-proxy || true"
   only:
     refs:
@@ -247,7 +247,7 @@ staging:
       mv docker-compose.yml $CI_PROJECT_PATH_SLUG-staging/docker-compose.yml;
       mv docker-compose.prod.yml $CI_PROJECT_PATH_SLUG-staging/docker-compose.prod.yml;
       cd $CI_PROJECT_PATH_SLUG-staging/;
-      docker-compose up -f docker-compose.yml -f docker-compose.prod.yml -d;
+      docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d;
       docker network connect ${CI_PROJECT_PATH_SLUG}-staging_default nginx-proxy || true"
   only:
     refs:
@@ -293,7 +293,7 @@ production:
       mv docker-compose.yml $CI_PROJECT_PATH_SLUG-production/docker-compose.yml;
       mv docker-compose.prod.yml $CI_PROJECT_PATH_SLUG-production/docker-compose.prod.yml;
       cd $CI_PROJECT_PATH_SLUG-production/;
-      docker-compose up -f docker-compose.yml -f docker-compose.prod.yml -d;
+      docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d;
       docker network connect ${CI_PROJECT_PATH_SLUG}-production_default nginx-proxy || true"
   allow_failure: false
   when: manual
