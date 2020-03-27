@@ -17,7 +17,6 @@ default:
       fi
 
 stages:
-  - setup
   - test
   - build
   - review
@@ -26,13 +25,10 @@ stages:
 
 cache:
   paths:
-    - node_modules/
+    - client/node_modules/
+    - server/node_modules/
 
-setup:
-  stage: setup
-  script:
-    - npm install
-    - npm install --only=dev
+# testing not setup
 
 .test: &test_template
   services:

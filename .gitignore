@@ -114,7 +114,7 @@ temp/
 **/*.back.*
 
 node_modules
-build/
+client/build/
 
 *.sublime*
 
