@@ -1,12 +1,14 @@
 type Query {
-#	events: [Event!]!
-	login(companyCode: String!, username: String!, password: String!): AuthData!
+	userLogin(code: String!, username: String!, password: String!, twoFactor: String): AuthData!
+  serviceAdminLogin(username: String!, password: String!, twoFactor: String): ServiceAdminData!
+  twoFactorQR(secret: String!): String!
 }
 
 type Mutation {
-#	createEvent(eventInput: EventInput): Event
 	createUser(code: String!, username: String!, password: String!): User
 	createCompany(name: String!, code: String!): Company
+  enableTwoFactor(secret: String!, token: String!): Boolean!
+  disableTwoFactor(password: String!): Boolean!
 }
 
 type User {
@@ -19,10 +21,22 @@ type Company {
 	code: String!
 }
 
+type ServiceAdmin {
+  username: String!
+}
+
 type AuthData {
-	user: User
-	token: String!
-	tokenExpiration: Int!
+  user: User
+	token: String
+	tokenExpiration: Int
+  twoFactorEnabled: Boolean!
+}
+
+type ServiceAdminData {
+  serviceAdmin: ServiceAdmin
+  token: String
+  tokenExpiration: Int
+  twoFactorEnabled: Boolean!
 }
 
 input UserInput {

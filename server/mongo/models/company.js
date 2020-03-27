@@ -10,8 +10,10 @@ const CompanySchema = Schema({
   code: {
     type: String,
     required: true,
-    unique: true, // implies index: true
+    unique: true, // unique index
   },
 });
+
+if (!global.gAutoIndex) { CompanySchema.set('autoIndex', false); }
 
 module.exports = mongoose.model('Company', CompanySchema);

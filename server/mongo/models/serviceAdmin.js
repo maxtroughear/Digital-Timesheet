@@ -4,12 +4,11 @@ const { twoFactorSchema } = require('./schemas');
 
 const { Schema } = mongoose;
 
-const Company = require('./company');
-
-const UserSchema = Schema({
+const ServiceAdminSchema = Schema({
   username: {
     type: String,
     required: true,
+    unique: true,
   },
   password: {
     type: String,
@@ -20,17 +19,13 @@ const UserSchema = Schema({
     required: true,
     default: {},
   },
-  company: {
-    type: Schema.Types.ObjectId,
-    ref: Company,
-    required: true,
-  },
   created: {
     type: Date,
     default: Date.now,
   },
 });
 
-if (!global.gAutoIndex) { UserSchema.set('autoIndex', false); }
+// only enable auto indexing if in development mode and only on the first instance
+if (!global.gAutoIndex) { ServiceAdminSchema.set('autoIndex', false); }
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model('ServiceAdmin', ServiceAdminSchema);

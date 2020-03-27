@@ -13,13 +13,15 @@ ARG SECRET_TOKEN_KEY
 ENV SECRET_TOKEN_KEY $SECRET_TOKEN_KEY
 
 ENV PORT 3000
-EXPOSE $PORT
 
 WORKDIR /usr/src/app
 
 COPY package.json /usr/src/app/
 RUN npm install --silent
 
+RUN npm install pm2 -g
+
 COPY . /usr/src/app
 
-CMD [ "npm", "start" ]
+#CMD [ "npm", "start" ]
+CMD [ "pm2-runtime", "ecosystem.config.js", "-i", "2" ]

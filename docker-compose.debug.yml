@@ -4,22 +4,23 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-    ports:
-      - 3000:3000
-      - 9229:9229
     environment:
       NODE_ENV: development
       SECRET_TOKEN_KEY: notasecretkey
-    command: node --inspect=0.0.0.0:9229 index.js
   
   frontend:
     build:
       context: ./client
       dockerfile: Dockerfile
-    ports:
-      - 3001:3001
     environment: 
       NODE_ENV: development
+
+  ingress:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
 
   mongo:
     ports:

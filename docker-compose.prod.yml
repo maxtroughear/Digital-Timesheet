@@ -2,19 +2,20 @@ version: '3'
 services: 
   api:
     image: __CI_APPLICATION_REPOSITORY__-api:__VERSION__
-    environment: 
-      VIRTUAL_HOST: api.__VIRTUAL_HOST__
-      VIRTUAL_PORT: __VIRTUAL_PORT__
-      LETSENCRYPT_HOST: api.__VIRTUAL_HOST_SSL__
+    environment:
       PRODUCTION: true
       NODE_ENV: production
-      SECRET_KEY: __SECRET_KEY__
+      SECRET_TOKEN_KEY: __SECRET_KEY__
   
   frontend:
     image: __CI_APPLICATION_REPOSITORY__-frontend:__VERSION__
-    environment: 
+    environment:
+      PRODUCTION: true
+      NODE_ENV: production
+
+  ingress:
+    image: __CI_APPLICATION_REPOSITORY__-ingress:__VERSION__
+    environment:
       VIRTUAL_HOST: __VIRTUAL_HOST__
       VIRTUAL_PORT: __VIRTUAL_PORT__
       LETSENCRYPT_HOST: __VIRTUAL_HOST_SSL__
-      PRODUCTION: true
-      NODE_ENV: production
