@@ -66,6 +66,7 @@ build-frontend:
       true
     - >
       docker build
+      -f Dockerfile.prod
       --cache-from "$CI_APPLICATION_REPOSITORY-frontend:$CI_COMMIT_BEFORE_SHA"
       --cache-from "$CI_APPLICATION_REPOSITORY-frontend:latest"
       -t "$CI_APPLICATION_REPOSITORY-frontend:latest"
