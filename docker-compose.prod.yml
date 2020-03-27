@@ -3,14 +3,14 @@ services:
   api:
     image: __CI_APPLICATION_REPOSITORY__-api:__VERSION__
     environment:
-      PRODUCTION: true
+      PRODUCTION: 'true'
       NODE_ENV: production
       SECRET_TOKEN_KEY: __SECRET_KEY__
   
   frontend:
     image: __CI_APPLICATION_REPOSITORY__-frontend:__VERSION__
     environment:
-      PRODUCTION: true
+      PRODUCTION: 'true'
       NODE_ENV: production
 
   ingress:
