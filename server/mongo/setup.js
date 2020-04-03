@@ -30,6 +30,13 @@ const addInitialUserAndCompany = async () => {
       name: 'Company One',
       code: '1',
     });
+
+    if (global.gAppInstance === '0') {
+      logger.info('Creating Default Company');
+      company.save().catch((err) => {
+        logger.error(err);
+      });
+    }
   }
 
   let user = await User.findOne({ company });
@@ -39,6 +46,13 @@ const addInitialUserAndCompany = async () => {
       username: 'user',
       password: bcrypt.hashSync('pass', 12),
     });
+
+    if (global.gAppInstance === '0') {
+      logger.info('Creating Default User');
+      user.save().catch((err) => {
+        logger.error(err);
+      });
+    }
   }
 };
 
