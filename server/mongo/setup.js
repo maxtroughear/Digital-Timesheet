@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const ServiceAdmin = require('./models/serviceAdmin');
+const { Company, User, ServiceAdmin } = require('./models');
 
 const logger = require('../logger');
 
@@ -23,7 +23,27 @@ const addInitialServiceAdmin = async () => {
   }
 };
 
+const addInitialUserAndCompany = async () => {
+  let company = await Company.findOne({ code: '1' });
+  if (!company) {
+    company = new Company({
+      name: 'Company One',
+      code: '1',
+    });
+  }
+
+  let user = await User.findOne({ company });
+  if (!user) {
+    user = new User({
+      company,
+      username: 'user',
+      password: bcrypt.hashSync('pass', 12),
+    });
+  }
+};
+
 module.exports = {
   setupIndexes,
   addInitialServiceAdmin,
+  addInitialUserAndCompany,
 };

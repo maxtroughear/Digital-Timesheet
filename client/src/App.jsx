@@ -2,7 +2,7 @@ import React from 'react';
 import { FullPageSpinner } from 'components/lib';
 import { useQuery } from '@apollo/client';
 
-import { GET_USER, IS_LOGGED_IN } from 'graphql/Queries';
+import { IS_LOGGED_IN } from 'graphql/Queries';
 
 const AuthenticatedApp = React.lazy(() => import('./AuthenticatedApp'));
 const UnauthenticatedApp = React.lazy(() => import('./UnauthenticatedApp'));

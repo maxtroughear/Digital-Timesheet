@@ -200,6 +200,13 @@ const UnauthenticatedApp = () => {
               </Button>
               {loading && <CircularProgress size={24} className={classes.buttonProgress} />}
             </div>
+            <Typography>
+              HINT: Login info
+              <br />
+              company: 1
+              username: user
+              password: pass
+            </Typography>
           </form>
         </Paper>
       </Grow>

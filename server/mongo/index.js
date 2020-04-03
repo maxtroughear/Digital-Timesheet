@@ -4,7 +4,7 @@ const logger = require('../logger');
 
 const models = require('./models');
 
-const { setupIndexes, addInitialServiceAdmin } = require('./setup');
+const { setupIndexes, addInitialServiceAdmin, addInitialUserAndCompany } = require('./setup');
 
 const connect = ({ uri, options }) => mongoose.connect(uri, options);
 
@@ -26,6 +26,7 @@ models.ServiceAdmin.on('index', (err) => {
 mongoose.connection.on('connected', () => {
   setupIndexes();
   addInitialServiceAdmin();
+  addInitialUserAndCompany();
 });
 
 module.exports = {
