@@ -1,6 +1,8 @@
 type Query {
 	userLogin(code: String!, username: String!, password: String!, twoFactor: String): AuthData!
   serviceAdminLogin(username: String!, password: String!, twoFactor: String): ServiceAdminData!
+  user(id: String): User
+  serviceAdmin(id: String): ServiceAdmin
   twoFactorQR(secret: String!): String!
 }
 
@@ -12,6 +14,7 @@ type Mutation {
 }
 
 type User {
+  id: ID!
 	company: Company!
 	username: String!
 }
@@ -22,6 +25,7 @@ type Company {
 }
 
 type ServiceAdmin {
+  id: ID!
   username: String!
 }
 

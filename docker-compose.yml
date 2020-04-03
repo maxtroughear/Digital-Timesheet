@@ -1,7 +1,7 @@
 version: '3'
 services:
   api:
-    depends_on: 
+    depends_on:
       - redis
       - mongo
     environment:
@@ -9,13 +9,8 @@ services:
       REDIS_HOST: 'redis'
 
   frontend:
-    depends_on:
-      - api
 
   ingress:
-    depends_on:
-      - api
-      - frontend
 
   redis:
     image: redis:alpine

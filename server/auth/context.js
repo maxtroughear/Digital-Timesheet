@@ -10,7 +10,7 @@ const getUserFromToken = async (token) => {
   } catch (err) {
     return null;
   }
-  const user = await User.findById(decoded.id);
+  const user = await User.findById(decoded.id).populate('company');
 
   if (!user) return null;
 

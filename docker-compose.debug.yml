@@ -14,6 +14,7 @@ services:
       dockerfile: Dockerfile
     environment: 
       NODE_ENV: development
+    stdin_open: true
 
   ingress:
     build:

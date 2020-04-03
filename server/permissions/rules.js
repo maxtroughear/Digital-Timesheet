@@ -3,7 +3,7 @@ const {
 } = require('graphql-shield');
 
 const isAuthenticated = rule({ cache: 'contextual' })(
-  async (_, args, { user, serviceAdmin }) => (user !== null || serviceAdmin !== null),
+  async (_, args, { user, serviceAdmin }) => user !== null || serviceAdmin !== null,
 );
 
 const isUser = rule({ cache: 'contextual' })(
