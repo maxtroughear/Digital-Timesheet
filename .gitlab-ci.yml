@@ -30,7 +30,6 @@ stages:
 cache:
   paths:
     - client/node_modules/
-    - server/node_modules/
 
 # testing not setup
 
@@ -126,7 +125,7 @@ review:
   extends: .deploy
   environment:
     name: review/${CI_COMMIT_REF_NAME}
-    url: http://review-${CI_ENVIRONMENT_SLUG}.${BASE_DOMAIN}
+    url: http://review-${CI_COMMIT_REF_SLUG}.${BASE_DOMAIN}
     on_stop: stop_review
   only:
     refs:
