@@ -17,6 +17,7 @@ default:
       fi
     - export APPLICATION_DIRECTORY=${CI_PROJECT_PATH_SLUG}-${CI_ENVIRONMENT_SLUG}
     # export variables to .env
+    - ls
     - chmod +x ./setup-env.sh
     - ./setup-env.sh
 
