@@ -69,7 +69,7 @@ func main() {
 		Cache: lru.New(200),
 	})
 
-	if os.Getenv("ENVIRONMENT") == "development" || true {
+	if os.Getenv("ENVIRONMENT") == "development" {
 		// IN DEVELOPMENT
 		gqlHandler2.Use(extension.Introspection{})
 
