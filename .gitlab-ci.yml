@@ -195,7 +195,7 @@ production:
     - ssh-add ~/.ssh/id_rsa
     - ssh-keyscan -H ${SERVER_IP} >> ~/.ssh/known_hosts
     - ENVIRONMENT_HOST=$(echo "${CI_ENVIRONMENT_URL}" | sed -e 's|^[^/]*//||')
-    - scp docker-compose.yml ${SERVER_USER}@{$SERVER_IP}:~/
+    - scp docker-compose.yml ${SERVER_USER}@${SERVER_IP}:~/
     - scp docker-compose.prod.yml ${SERVER_USER}@${SERVER_IP}:~/
     - scp .env ${SERVER_USER}@${SERVER_IP}:~/
     - >
