@@ -1,0 +1,98 @@
+{
+  "folders": [
+    {
+      "name": "Config",
+      "path": "."
+    },
+    {
+      "name": "Client",
+      "path": "client"
+    },
+    {
+      "name": "Server",
+      "path": "server"
+    },
+    {
+      "name": "Go Server",
+      "path": "go-server"
+    },
+    {
+      "name": "Reverse-Proxy",
+      "path": "reverse-proxy"
+    },
+    {
+      "name": "Docs",
+      "path": "docs"
+    },
+    {
+      "name": "Licenses",
+      "path": "licenses"
+    }
+  ],
+  "settings": {
+    "eslint.format.enable": true,
+    "eslint.workingDirectories": [
+      "client",
+      "server"
+    ],
+    "path-autocomplete.extensionOnImport": true,
+    "path-autocomplete.excludedItems": {
+      "**/*.js": {"when": "**"},
+      "**/*.jsx": {"when": "**"}
+    },
+    "editor.codeActionsOnSaveTimeout": 3000,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "go.useLanguageServer": true,
+    "go.autocompleteUnimportedPackages": true,
+    "[javascript]": {
+      "editor.codeActionsOnSave": {
+        "source.fixAll": true
+      },
+    },
+    "[javascriptreact]": {
+      "editor.codeActionsOnSave": {
+        "source.fixAll": true
+      },
+    },
+    "[go]": {
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
+      },
+      "editor.tabSize": 4,
+      "editor.insertSpaces": false,
+      // Optional: Disable snippets, as they conflict with completion ranking.
+      "editor.snippetSuggestions": "none",
+    },
+    "[go.mod]": {
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
+      },
+    },
+    "gopls": {
+      // Add parameter placeholders when completing a function.
+      "usePlaceholders": true,
+      
+      // If true, enable additional analyses with staticcheck.
+      // Warning: This will significantly increase memory usage.
+      "staticcheck": false,
+    },
+    // Hide root directory folders
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "**/*.graphql": false,
+      "client/": true,
+      "docs/": true,
+      "go-server/": true,
+      "licenses/": true,
+      "reverse-proxy/": true,
+      "server/": true
+    }
+  }
+}

@@ -33,6 +33,11 @@
       "node": {
         "moduleDirectory": ["node_modules", "src/"]
       }
-    }
+    },
+    "import/extensions": [
+      ".js",
+      ".jsx",
+      ".graphql"
+    ]
   }
 }

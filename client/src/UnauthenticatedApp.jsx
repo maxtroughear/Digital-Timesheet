@@ -12,7 +12,7 @@ import { useApolloClient, useLazyQuery } from '@apollo/client';
 
 import SnackbarAlert from 'components/SnackbarAlert';
 
-import { LOGIN_USER, IS_LOGGED_IN } from 'graphql/Queries';
+import { LOGIN, IS_LOGGED_IN } from 'graphql/Queries';
 import localStorageKey from 'utils/LocalStorageKey';
 
 const useStyles = makeStyles((theme) => ({
@@ -79,19 +79,19 @@ const UnauthenticatedApp = () => {
   const [success, setSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const [login, {
+  const [loginQuery, {
     data, loading,
-  }] = useLazyQuery(LOGIN_USER, {
+  }] = useLazyQuery(LOGIN, {
     fetchPolicy: 'network-only',
     errorPolicy: 'none',
-    onCompleted({ userLogin }) {
-      if (userLogin.twoFactorEnabled && !userLogin.token) {
+    onCompleted({ login }) {
+      if (login.twoFactorEnabled && !login.token) {
         setTwoFactorEnabledOpen(true);
         setTwoFactorEnabled(true);
         return;
       }
       setSuccess(true);
-      localStorage.setItem(localStorageKey, userLogin.token);
+      localStorage.setItem(localStorageKey, login.token);
     },
     onError(e) {
       setErrorMessage(e.message.replace('GraphQL error: ', ''));
@@ -128,7 +128,7 @@ const UnauthenticatedApp = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     if (!loading && !success) {
-      login({
+      loginQuery({
         variables: {
           company,
           username,

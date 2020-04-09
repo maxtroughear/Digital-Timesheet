@@ -2,11 +2,14 @@ version: '3'
 services:
   api:
     build:
-      context: ./server
+      context: ./go-server
       dockerfile: Dockerfile
     environment:
-      NODE_ENV: development
+      ENVIRONMENT: development
       SECRET_TOKEN_KEY: notasecretkey
+      POSTGRES_USER: dts
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dts
   
   frontend:
     build:
@@ -16,13 +19,28 @@ services:
       NODE_ENV: development
     stdin_open: true
 
-  ingress:
+  reverse-proxy:
     build:
-      context: ./nginx
+      context: ./reverse-proxy
       dockerfile: Dockerfile
     ports:
       - 80:80
 
-  mongo:
+  db:
+    environment:
+      POSTGRES_USER: dts
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dts
+  
+  pgadmin:
+    image: dpage/pgadmin4
+    environment: 
+      PGADMIN_DEFAULT_EMAIL: pgadmin
+      PGADMIN_DEFAULT_PASSWORD: password
+    volumes:
+      - pgadmin:/root/.pgadmin
     ports:
-      - 27017:27017
+      - "8081:80"
+
+volumes:
+  pgadmin:

@@ -1,0 +1,13 @@
+type User {
+  id: ID!
+	company: Company!
+	username: String!
+}
+
+extend type Query {
+  user(id: ID): User!
+}
+
+extend type Mutation {
+  createUser(code: String!, username: String!, password: String!): User
+}

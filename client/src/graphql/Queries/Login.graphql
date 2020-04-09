@@ -1,0 +1,9 @@
+query LOGIN($company: String! $username: String! $password: String! $twoFactor: String) {
+  login(code: $company username: $username password: $password twoFactor: $twoFactor) {
+    user {
+      username
+    }
+    token
+    twoFactorEnabled
+  }
+}

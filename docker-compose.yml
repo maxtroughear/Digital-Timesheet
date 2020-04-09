@@ -2,23 +2,22 @@ version: '3'
 services:
   api:
     depends_on:
-      - redis
-      - mongo
+      - db
     environment:
-      MONGO_URI: 'mongodb://mongo:27017/digital-timesheet?retryWrites=true&w=majority'
-      REDIS_HOST: 'redis'
+      POSTGRES_HOST: db
 
   frontend:
+    environment: 
+      NODE_PATH: ./src
 
-  ingress:
+  reverse-proxy:
 
-  redis:
-    image: redis:alpine
-
-  mongo:
-    image: mongo:latest
+  db:
+    image: postgres:latest
+    environment: 
+      PGDATA: /var/lib/postgresql/data/db
     volumes:
-    - db-data:/data/db
+    - pg-db:/var/lib/postgresql/data
 
 volumes:
-  db-data:
+  pg-db:
