@@ -62,7 +62,6 @@ build-frontend:
     - docker:stable-dind
   script:
     - cd ./client
-    - docker info
     - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     - >
       docker image pull "${CI_APPLICATION_REPOSITORY}-frontend:${CI_COMMIT_BEFORE_SHA}" ||
@@ -86,7 +85,6 @@ build-reverse-proxy:
     - docker:stable-dind
   script:
     - cd ./reverse-proxy
-    - docker info
     - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     - >
       docker image pull "${CI_APPLICATION_REPOSITORY}-reverse-proxy:${CI_COMMIT_BEFORE_SHA}" ||
@@ -109,8 +107,7 @@ build-api:
     - docker:stable-dind
   script:
     - cd ./server
-    - docker info
-    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "{$CI_REGISTRY}"
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     - >
       docker image pull "${CI_APPLICATION_REPOSITORY}-api:${CI_COMMIT_BEFORE_SHA}" ||
       docker image pull "${CI_APPLICATION_REPOSITORY}-api:latest" ||
