@@ -5,7 +5,7 @@ services:
     environment:
       PRODUCTION: 'true'
       NODE_ENV: production
-      SECRET_TOKEN_KEY: __SECRET_KEY__
+      SECRET_TOKEN_KEY: notasecret
   
   frontend:
     image: __CI_APPLICATION_REPOSITORY__-frontend:__VERSION__
