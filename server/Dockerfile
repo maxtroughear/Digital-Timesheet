@@ -1,4 +1,4 @@
-FROM node:lts-slim
+FROM node:latest
 
 ARG NODE_ENV
 ENV NODE_ENV $NODE_ENV
