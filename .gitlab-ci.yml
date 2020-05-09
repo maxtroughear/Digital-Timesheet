@@ -15,6 +15,11 @@ default:
         export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE}
         export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
       fi
+    - export ENVIRONMENT_HOST=$(echo "$CI_ENVIRONMENT_URL" | sed -e 's|^[^/]*//||')
+    - export APPLICATION_DIRECTORY=${CI_PROJECT_PATH_SLUG}-${CI_ENVIRONMENT_SLUG}
+    # export variables to .env
+    - chmod +x ./setup-env.sh
+    - ./setup-env.sh
 
 stages:
   - test
@@ -26,7 +31,6 @@ stages:
 cache:
   paths:
     - client/node_modules/
-    - server/node_modules/
 
 # testing not setup
 
@@ -58,21 +62,20 @@ build-frontend:
     - docker:stable-dind
   script:
     - cd ./client
-    - docker info
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     - >
-      docker image pull "$CI_APPLICATION_REPOSITORY-frontend:$CI_COMMIT_BEFORE_SHA" ||
-      docker image pull "$CI_APPLICATION_REPOSITORY-frontend:latest" ||
+      docker image pull "${CI_APPLICATION_REPOSITORY}-frontend:${CI_COMMIT_BEFORE_SHA}" ||
+      docker image pull "${CI_APPLICATION_REPOSITORY}-frontend:latest" ||
       true
     - >
       docker build
       -f Dockerfile.prod
-      --cache-from "$CI_APPLICATION_REPOSITORY-frontend:$CI_COMMIT_BEFORE_SHA"
-      --cache-from "$CI_APPLICATION_REPOSITORY-frontend:latest"
-      -t "$CI_APPLICATION_REPOSITORY-frontend:latest"
-      -t "$CI_APPLICATION_REPOSITORY-frontend:$CI_APPLICATION_TAG" .
-    - test ! -z "$CI_COMMIT_TAG" && docker push "$CI_APPLICATION_REPOSITORY-frontend:latest"
-    - docker push "$CI_APPLICATION_REPOSITORY-frontend:$CI_APPLICATION_TAG"
+      --cache-from "${CI_APPLICATION_REPOSITORY}-frontend:${CI_COMMIT_BEFORE_SHA}"
+      --cache-from "${CI_APPLICATION_REPOSITORY}-frontend:latest"
+      -t "${CI_APPLICATION_REPOSITORY}-frontend:latest"
+      -t "${CI_APPLICATION_REPOSITORY}-frontend:${CI_APPLICATION_TAG}" .
+    - test ! -z "${CI_COMMIT_TAG}" && docker push "${CI_APPLICATION_REPOSITORY}-frontend:latest"
+    - docker push "${CI_APPLICATION_REPOSITORY}-frontend:${CI_APPLICATION_TAG}"
 
 build-ingress:
   stage: build
@@ -82,20 +85,19 @@ build-ingress:
     - docker:stable-dind
   script:
     - cd ./nginx
-    - docker info
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     - >
-      docker image pull "$CI_APPLICATION_REPOSITORY-ingress:$CI_COMMIT_BEFORE_SHA" ||
-      docker image pull "$CI_APPLICATION_REPOSITORY-ingress:latest" ||
+      docker image pull "${CI_APPLICATION_REPOSITORY}-ingress:${CI_COMMIT_BEFORE_SHA}" ||
+      docker image pull "${CI_APPLICATION_REPOSITORY}-ingress:latest" ||
       true
     - >
       docker build
-      --cache-from "$CI_APPLICATION_REPOSITORY-ingress:$CI_COMMIT_BEFORE_SHA"
-      --cache-from "$CI_APPLICATION_REPOSITORY-ingress:latest"
-      -t "$CI_APPLICATION_REPOSITORY-ingress:latest"
-      -t "$CI_APPLICATION_REPOSITORY-ingress:$CI_APPLICATION_TAG" .
-    - test ! -z "$CI_COMMIT_TAG" && docker push "$CI_APPLICATION_REPOSITORY-ingress:latest"
-    - docker push "$CI_APPLICATION_REPOSITORY-ingress:$CI_APPLICATION_TAG"
+      --cache-from "${CI_APPLICATION_REPOSITORY}-ingress:${CI_COMMIT_BEFORE_SHA}"
+      --cache-from "${CI_APPLICATION_REPOSITORY}-ingress:latest"
+      -t "${CI_APPLICATION_REPOSITORY}-ingress:latest"
+      -t "${CI_APPLICATION_REPOSITORY}-ingress:${CI_APPLICATION_TAG}" .
+    - test ! -z "${CI_COMMIT_TAG}" && docker push "${CI_APPLICATION_REPOSITORY}-ingress:latest"
+    - docker push "${CI_APPLICATION_REPOSITORY}-ingress:${CI_APPLICATION_TAG}"
 
 build-api:
   stage: build
@@ -105,62 +107,27 @@ build-api:
     - docker:stable-dind
   script:
     - cd ./server
-    - docker info
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     - >
-      docker image pull "$CI_APPLICATION_REPOSITORY-api:$CI_COMMIT_BEFORE_SHA" ||
-      docker image pull "$CI_APPLICATION_REPOSITORY-api:latest" ||
+      docker image pull "${CI_APPLICATION_REPOSITORY}-api:${CI_COMMIT_BEFORE_SHA}" ||
+      docker image pull "${CI_APPLICATION_REPOSITORY}-api:latest" ||
       true
     - >
       docker build
-      --cache-from "$CI_APPLICATION_REPOSITORY-api:$CI_COMMIT_BEFORE_SHA"
-      --cache-from "$CI_APPLICATION_REPOSITORY-api:latest"
-      -t "$CI_APPLICATION_REPOSITORY-api:latest"
-      -t "$CI_APPLICATION_REPOSITORY-api:$CI_APPLICATION_TAG" .
-    - test ! -z "$CI_COMMIT_TAG" && docker push "$CI_APPLICATION_REPOSITORY-api:latest"
-    - docker push "$CI_APPLICATION_REPOSITORY-api:$CI_APPLICATION_TAG"
+      --cache-from "${CI_APPLICATION_REPOSITORY}-api:${CI_COMMIT_BEFORE_SHA}"
+      --cache-from "${CI_APPLICATION_REPOSITORY}-api:latest"
+      -t "${CI_APPLICATION_REPOSITORY}-api:latest"
+      -t "${CI_APPLICATION_REPOSITORY}-api:${CI_APPLICATION_TAG}" .
+    - test ! -z "${CI_COMMIT_TAG}" && docker push "${CI_APPLICATION_REPOSITORY}-api:latest"
+    - docker push "${CI_APPLICATION_REPOSITORY}-api:${CI_APPLICATION_TAG}"
 
 review:
   stage: review
-  image: kroniak/ssh-client
+  extends: .deploy
   environment:
-    name: review/$CI_COMMIT_REF_NAME
-    url: http://review-$CI_COMMIT_REF_SLUG.$BASE_DOMAIN
+    name: review/${CI_COMMIT_REF_NAME}
+    url: http://review-${CI_COMMIT_REF_SLUG}.${BASE_DOMAIN}
     on_stop: stop_review
-  before_script:
-    - |
-      if [[ -z "$CI_COMMIT_TAG" ]]; then
-        export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG}
-        export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_SHA}
-      else
-        export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE}
-        export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
-      fi
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - echo "$REVIEW_SERVER_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - eval "$(ssh-agent -s)"
-    - ssh-add ~/.ssh/id_rsa
-    - ssh-keyscan -H $REVIEW_SERVER_IP >> ~/.ssh/known_hosts
-  script:
-    - ENVIRONMENT_HOST=$(echo "$CI_ENVIRONMENT_URL" | sed -e 's|^[^/]*//||')
-    - sed -i "s~__CI_APPLICATION_REPOSITORY__~${CI_APPLICATION_REPOSITORY}~" docker-compose.prod.yml
-    - sed -i "s~__VERSION__~${CI_APPLICATION_TAG}~" docker-compose.prod.yml
-    - sed -i "s~__VIRTUAL_HOST__~${ENVIRONMENT_HOST}~" docker-compose.prod.yml
-    - sed -i "s~__VIRTUAL_HOST_SSL__~~" docker-compose.prod.yml
-    - sed -i "s~__VIRTUAL_PORT__~${INTERNAL_PORT}~" docker-compose.prod.yml
-    - sed -i "s~__SECRET_KEY__~${REVIEW_SECRET_KEY}~" docker-compose.prod.yml
-    - scp docker-compose.yml $REVIEW_SERVER_USER@$REVIEW_SERVER_IP:~/
-    - scp docker-compose.prod.yml $REVIEW_SERVER_USER@$REVIEW_SERVER_IP:~/
-    - >
-      ssh $REVIEW_SERVER_USER@$REVIEW_SERVER_IP "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY;
-      mkdir -p $CI_PROJECT_PATH_SLUG-review-$CI_COMMIT_REF_NAME/;
-      mv docker-compose.yml $CI_PROJECT_PATH_SLUG-review-$CI_COMMIT_REF_NAME/docker-compose.yml;
-      mv docker-compose.prod.yml $CI_PROJECT_PATH_SLUG-review-$CI_COMMIT_REF_NAME/docker-compose.prod.yml;
-      cd $CI_PROJECT_PATH_SLUG-review-$CI_COMMIT_REF_NAME/;
-      docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d;
-      docker network connect ${CI_PROJECT_PATH_SLUG}-review-${CI_COMMIT_REF_NAME}_default nginx-proxy || true"
   only:
     refs:
       - branches
@@ -173,32 +140,13 @@ review:
 
 stop_review:
   stage: review
-  image: kroniak/ssh-client
+  extends: .stop_deploy
+  environment:
+    name: review/${CI_COMMIT_REF_NAME}
+    action: stop
   variables:
     GIT_STRATEGY: none
   when: manual
-  environment:
-    name: review/$CI_COMMIT_REF_NAME
-    action: stop
-  before_script:
-    - |
-      if [[ -z "$CI_COMMIT_TAG" ]]; then
-        export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG}
-        export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_SHA}
-      else
-        export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE}
-        export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
-      fi
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - echo "$REVIEW_SERVER_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - eval "$(ssh-agent -s)"
-    - ssh-add ~/.ssh/id_rsa
-    - ssh-keyscan -H $REVIEW_SERVER_IP >> ~/.ssh/known_hosts
-  script:
-    - >
-      ssh $REVIEW_SERVER_USER@$REVIEW_SERVER_IP "cd $CI_PROJECT_PATH_SLUG-review-$CI_COMMIT_REF_NAME/; docker-compose -f docker-compose.yml -f docker-compose.prod.yml down || true"
   only:
     refs:
       - branches
@@ -211,44 +159,10 @@ stop_review:
 
 staging:
   stage: staging
-  image: kroniak/ssh-client
+  extends: .deploy
   environment:
     name: staging
     url: http://staging.$BASE_DOMAIN
-  before_script:
-    - |
-      if [[ -z "$CI_COMMIT_TAG" ]]; then
-        export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG}
-        export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_SHA}
-      else
-        export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE}
-        export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
-      fi
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - echo "$STAGING_SERVER_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - eval "$(ssh-agent -s)"
-    - ssh-add ~/.ssh/id_rsa
-    - ssh-keyscan -H $STAGING_SERVER_IP >> ~/.ssh/known_hosts
-  script:
-    - ENVIRONMENT_HOST=$(echo "$CI_ENVIRONMENT_URL" | sed -e 's|^[^/]*//||')
-    - sed -i "s~__CI_APPLICATION_REPOSITORY__~${CI_APPLICATION_REPOSITORY}~" docker-compose.prod.yml
-    - sed -i "s~__VERSION__~${CI_APPLICATION_TAG}~" docker-compose.prod.yml
-    - sed -i "s~__VIRTUAL_HOST__~${ENVIRONMENT_HOST}~" docker-compose.prod.yml
-    - sed -i "s~__VIRTUAL_HOST_SSL__~${ENVIRONMENT_HOST}~" docker-compose.prod.yml
-    - sed -i "s~__VIRTUAL_PORT__~${INTERNAL_PORT}~" docker-compose.prod.yml
-    - sed -i "s~__SECRET_KEY__~${STAGING_SECRET_KEY}~" docker-compose.prod.yml
-    - scp docker-compose.yml $STAGING_SERVER_USER@$STAGING_SERVER_IP:~/
-    - scp docker-compose.prod.yml $PRODUCTION_SERVER_USER@$PRODUCTION_SERVER_IP:~/
-    - >
-      ssh $STAGING_SERVER_USER@$STAGING_SERVER_IP "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY;
-      mkdir -p $CI_PROJECT_PATH_SLUG-staging/;
-      mv docker-compose.yml $CI_PROJECT_PATH_SLUG-staging/docker-compose.yml;
-      mv docker-compose.prod.yml $CI_PROJECT_PATH_SLUG-staging/docker-compose.prod.yml;
-      cd $CI_PROJECT_PATH_SLUG-staging/;
-      docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d;
-      docker network connect ${CI_PROJECT_PATH_SLUG}-staging_default nginx-proxy || true"
   only:
     refs:
       - master
@@ -257,44 +171,10 @@ staging:
 
 production:
   stage: deploy
-  image: kroniak/ssh-client
+  extends: .deploy
   environment:
     name: production
     url: http://$BASE_DOMAIN
-  before_script:
-    - |
-      if [[ -z "$CI_COMMIT_TAG" ]]; then
-        export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG}
-        export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_SHA}
-      else
-        export CI_APPLICATION_REPOSITORY=${CI_APPLICATION_REPOSITORY:-$CI_REGISTRY_IMAGE}
-        export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
-      fi
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - echo "$PRODUCTION_SERVER_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - eval "$(ssh-agent -s)"
-    - ssh-add ~/.ssh/id_rsa
-    - ssh-keyscan -H $PRODUCTION_SERVER_IP >> ~/.ssh/known_hosts
-  script:
-    - ENVIRONMENT_HOST=$(echo "$CI_ENVIRONMENT_URL" | sed -e 's|^[^/]*//||')
-    - sed -i "s~__CI_APPLICATION_REPOSITORY__~${CI_APPLICATION_REPOSITORY}~" docker-compose.prod.yml
-    - sed -i "s~__VERSION__~${CI_APPLICATION_TAG}~" docker-compose.prod.yml
-    - sed -i "s~__VIRTUAL_HOST__~${ENVIRONMENT_HOST}~" docker-compose.prod.yml
-    - sed -i "s~__VIRTUAL_HOST_SSL__~${ENVIRONMENT_HOST}~" docker-compose.prod.yml
-    - sed -i "s~__VIRTUAL_PORT__~${INTERNAL_PORT}~" docker-compose.prod.yml
-    - sed -i "s~__SECRET_KEY__~${PRODUCTION_SECRET_KEY}~" docker-compose.prod.yml
-    - scp docker-compose.yml $PRODUCTION_SERVER_USER@$PRODUCTION_SERVER_IP:~/
-    - scp docker-compose.prod.yml $PRODUCTION_SERVER_USER@$PRODUCTION_SERVER_IP:~/
-    - >
-      ssh $PRODUCTION_SERVER_USER@$PRODUCTION_SERVER_IP "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY;
-      mkdir -p $CI_PROJECT_PATH_SLUG-production/;
-      mv docker-compose.yml $CI_PROJECT_PATH_SLUG-production/docker-compose.yml;
-      mv docker-compose.prod.yml $CI_PROJECT_PATH_SLUG-production/docker-compose.prod.yml;
-      cd $CI_PROJECT_PATH_SLUG-production/;
-      docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d;
-      docker network connect ${CI_PROJECT_PATH_SLUG}-production_default nginx-proxy || true"
   allow_failure: false
   when: manual
   only:
@@ -302,3 +182,42 @@ production:
       - master
     variables:
       - $PRODUCTION_ENABLED
+
+
+.deploy:
+  image: kroniak/ssh-client
+  script:
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "${SERVER_PRIVATE_KEY}" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - eval "$(ssh-agent -s)"
+    - ssh-add ~/.ssh/id_rsa
+    - ssh-keyscan -H ${SERVER_IP} >> ~/.ssh/known_hosts
+    - ENVIRONMENT_HOST=$(echo "${CI_ENVIRONMENT_URL}" | sed -e 's|^[^/]*//||')
+    - scp docker-compose.yml ${SERVER_USER}@${SERVER_IP}:~/
+    - scp docker-compose.prod.yml ${SERVER_USER}@${SERVER_IP}:~/
+    - scp .env ${SERVER_USER}@${SERVER_IP}:~/
+    - >
+      ssh ${SERVER_USER}@${SERVER_IP} "docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY};
+      mkdir -p ${APPLICATION_DIRECTORY}/;
+      mv docker-compose.yml ${APPLICATION_DIRECTORY}/;
+      mv docker-compose.prod.yml ${APPLICATION_DIRECTORY}/;
+      mv .env ${APPLICATION_DIRECTORY}/;
+      cd ${APPLICATION_DIRECTORY}/;
+      docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d;
+      docker network connect ${APPLICATION_DIRECTORY}_default nginx-proxy || true"
+
+.stop_deploy:
+  image: kroniak/ssh-client
+  script:
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "${SERVER_PRIVATE_KEY}" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - eval "$(ssh-agent -s)"
+    - ssh-add ~/.ssh/id_rsa
+    - ssh-keyscan -H ${SERVER_IP} >> ~/.ssh/known_hosts
+    - >
+      ssh ${SERVER_USER}@${SERVER_IP} "cd ${APPLICATION_DIRECTORY}/;
+      docker-compose -f docker-compose.yml -f docker-compose.prod.yml down || true"
