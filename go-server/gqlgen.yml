@@ -1,10 +1,10 @@
 # Where are all the schema files located? globs are supported eg  src/**/*.graphql
 schema:
-  - graph/schema/**/*.graphql
+  - graphql/schema/**/*.graphql
 
 # Where should the generated server code go?
 exec:
-  filename: graph/generated/generated.go
+  filename: graphql/generated/generated.go
   package: generated
 
 # Uncomment to enable federation
@@ -14,14 +14,14 @@ exec:
 
 # Where should any generated models go?
 model:
-  filename: model/models_gen.go
-  package: model
+  filename: graphql/modelgen/models.go
+  package: modelgen
 
 # Where should the resolver implementations go?
 resolver:
   layout: follow-schema
-  dir: graph
-  package: graph
+  dir: graphql/resolver
+  package: resolver
 
 # Optional: turn on use `gqlgen:"fieldName"` tags in your models
 struct_tag: json
@@ -35,7 +35,7 @@ struct_tag: json
 # gqlgen will search for any type names in the schema in these go packages
 # if they match it will use them, otherwise it will generate them.
 autobind:
-  - "git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/model"
+  - "git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model"
 
 # This section declares type mapping between the GraphQL and go type systems
 #
@@ -45,7 +45,7 @@ autobind:
 models:
   ID:
     model:
-      - git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/model.ID
+      - git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model.ID
   Int:
     model:
       - github.com/99designs/gqlgen/graphql.Int

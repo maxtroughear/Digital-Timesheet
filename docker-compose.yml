@@ -5,6 +5,8 @@ services:
       - db
     environment:
       POSTGRES_HOST: db
+      APP_VERSION: 0.0.0
+      PORT: 3000
 
   frontend:
     environment: 

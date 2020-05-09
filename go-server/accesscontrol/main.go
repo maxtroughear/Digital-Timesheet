@@ -1,0 +1,5 @@
+package accesscontrol
+
+func Init() {
+
+}

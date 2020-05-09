@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"os"
 	"time"
 
-	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/model"
+	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model"
+	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/util"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/emvi/hide"
 )
@@ -15,34 +15,36 @@ type UserClaim struct {
 	jwt.StandardClaims
 }
 
-var signingKey = []byte(os.Getenv("SECRET_TOKEN_KEY"))
-
-func validateTokenAndGetUserID(t string) (hide.ID, error) {
+func validateTokenAndGetUserID(t string, cfg *util.JWTConfig) (hide.ID, error) {
 	token, err := jwt.ParseWithClaims(t, &UserClaim{}, func(token *jwt.Token) (interface{}, error) {
-		return signingKey, nil
+		return []byte(cfg.Secret), nil
 	})
 
 	if err != nil {
 		return 0, err
 	}
 
-	if claims, ok := token.Claims.(*UserClaim); ok && token.Valid && token.Method == jwt.SigningMethodHS256 {
+	if claims, ok := token.Claims.(*UserClaim); ok && token.Valid && token.Method == jwt.SigningMethodHS384 {
 		return claims.UserID, nil
 	}
 	return 0, err
 }
 
 // buildAndSignToken signs and returned a JWT token from a User
-func buildAndSignToken(u model.User) (string, error) {
+func buildAndSignToken(u *model.User, cfg *util.JWTConfig, expires time.Duration) (string, error) {
 	claims := UserClaim{
-		u.ID,
-		jwt.StandardClaims{
+		UserID: u.ID,
+		StandardClaims: jwt.StandardClaims{
 			Issuer:   "dts",
 			IssuedAt: time.Now().Unix(),
 			Subject:  u.Company.Code + "/" + u.Username,
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(signingKey)
+	if expires != 0 {
+		claims.ExpiresAt = time.Now().Add(expires).Unix()
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS384, claims)
+	return token.SignedString([]byte(cfg.Secret))
 }

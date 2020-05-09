@@ -5,7 +5,7 @@ services:
     environment:
       PRODUCTION: 'true'
       ENVIRONMENT: production
-      SECRET_TOKEN_KEY: ${SECRET_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}

@@ -1,6 +1,0 @@
-type Query {
-  version: String!
-}
-
-directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
-  | FIELD_DEFINITION

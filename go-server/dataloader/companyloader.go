@@ -3,12 +3,13 @@ package dataloader
 import (
 	"time"
 
-	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/model"
+	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/dataloader/generated"
+	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model"
 	"github.com/jinzhu/gorm"
 )
 
-func newCompanyByIDLoader(db *gorm.DB) *CompanyLoader {
-	return NewCompanyLoader(CompanyLoaderConfig{
+func newCompanyByIDLoader(db *gorm.DB) *generated.CompanyLoader {
+	return generated.NewCompanyLoader(generated.CompanyLoaderConfig{
 		MaxBatch: 100,
 		Wait:     1 * time.Millisecond,
 		Fetch: func(ids []int64) ([]*model.Company, []error) {
@@ -40,8 +41,8 @@ func newCompanyByIDLoader(db *gorm.DB) *CompanyLoader {
 	})
 }
 
-func newCompanyByUserIDLoader(db *gorm.DB) *CompanyLoader {
-	return NewCompanyLoader(CompanyLoaderConfig{
+func newCompanyByUserIDLoader(db *gorm.DB) *generated.CompanyLoader {
+	return generated.NewCompanyLoader(generated.CompanyLoaderConfig{
 		MaxBatch: 100,
 		Wait:     1 * time.Millisecond,
 		Fetch: func(userIDs []int64) ([]*model.Company, []error) {
@@ -105,8 +106,8 @@ func newCompanyByUserIDLoader(db *gorm.DB) *CompanyLoader {
 	})
 }
 
-func newCompanyByCodeLoader(db *gorm.DB) *CompanyStringLoader {
-	return NewCompanyStringLoader(CompanyStringLoaderConfig{
+func newCompanyByCodeLoader(db *gorm.DB) *generated.CompanyStringLoader {
+	return generated.NewCompanyStringLoader(generated.CompanyStringLoaderConfig{
 		MaxBatch: 100,
 		Wait:     1 * time.Millisecond,
 		Fetch: func(companyCodes []string) ([]*model.Company, []error) {

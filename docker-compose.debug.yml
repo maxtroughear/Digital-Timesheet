@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     environment:
       ENVIRONMENT: development
-      SECRET_TOKEN_KEY: notasecretkey
+      JWT_SECRET_KEY: notasecretkey
       POSTGRES_USER: dts
       POSTGRES_PASSWORD: password
       POSTGRES_DB: dts

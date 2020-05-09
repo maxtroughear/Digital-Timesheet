@@ -3,12 +3,14 @@ package dataloader
 import (
 	"time"
 
-	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/model"
+	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/dataloader/generated"
+	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model"
+	"github.com/emvi/hide"
 	"github.com/jinzhu/gorm"
 )
 
-func newUserByIDLoader(db *gorm.DB) *UserLoader {
-	return NewUserLoader(UserLoaderConfig{
+func newUserByIDLoader(db *gorm.DB) *generated.UserLoader {
+	return generated.NewUserLoader(generated.UserLoaderConfig{
 		MaxBatch: 100,
 		Wait:     1 * time.Millisecond,
 		Fetch: func(ids []int64) ([]*model.User, []error) {
@@ -40,24 +42,40 @@ func newUserByIDLoader(db *gorm.DB) *UserLoader {
 	})
 }
 
-func newUsersByCompanyIDLoader(db *gorm.DB) *UserSliceLoader {
-	return NewUserSliceLoader(UserSliceLoaderConfig{
+func newUsersByCompanyIDLoader(db *gorm.DB) *generated.UserSliceLoader {
+	return generated.NewUserSliceLoader(generated.UserSliceLoaderConfig{
 		MaxBatch: 100,
 		Wait:     1 * time.Millisecond,
 		Fetch: func(companyIDs []int64) ([][]*model.User, []error) {
+			var companyUsers [][]*model.User
+			//var errs []error
+
+			for _, companyID := range companyIDs {
+				db.Model(model.Company{
+					ModelSoftDelete: model.ModelSoftDelete{
+						ID: hide.ID(companyID),
+					},
+				}).Related(&companyUsers)
+			}
+
 			rows, err := db.Model(&model.User{}).Where("company_id IN (?)", companyIDs).Rows()
-			defer rows.Close()
 
 			if err != nil {
 				return nil, []error{err}
 			}
 
+			defer rows.Close()
+
 			// group by company ID
 			groupByCompanyID := make(map[int64][]*model.User, len(companyIDs))
+			//errByCompanyID := make(map[int64]error, len(companyIDs))
 
 			for rows.Next() {
 				var user model.User
-				db.ScanRows(rows, &user)
+				err := db.ScanRows(rows, &user)
+				if err != nil {
+					//errByCompanyID[]
+				}
 				groupByCompanyID[int64(user.CompanyID)] = append(groupByCompanyID[int64(user.CompanyID)], &user)
 			}
 
