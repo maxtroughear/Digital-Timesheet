@@ -17,12 +17,13 @@ type contextKey struct {
 
 // Loaders structure contains usable dataloaders
 type Loaders struct {
-	UserByID           *generated.UserLoader
-	UsersByCompanyID   *generated.UserSliceLoader
-	CompanyByID        *generated.CompanyLoader
-	CompanyByUserID    *generated.CompanyLoader
-	CompanyByCode      *generated.CompanyStringLoader
-	PermissionByUserID *generated.PermissionsLoader
+	UserByID         *generated.UserLoader
+	UsersByCompanyID *generated.UserSliceLoader
+	CompanyByID      *generated.CompanyLoader
+	CompanyByUserID  *generated.CompanyLoader
+	CompanyByCode    *generated.CompanyStringLoader
+	RolesByUserID    *generated.RoleLoader
+	//PermissionByUserID *generated.PermissionsLoader
 }
 
 // Middleware handles dataloader requests
@@ -30,12 +31,13 @@ func Middleware(db *gorm.DB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			loaders := &Loaders{
-				UserByID:           newUserByIDLoader(db),
-				UsersByCompanyID:   newUsersByCompanyIDLoader(db),
-				CompanyByID:        newCompanyByIDLoader(db),
-				CompanyByUserID:    newCompanyByUserIDLoader(db),
-				CompanyByCode:      newCompanyByCodeLoader(db),
-				PermissionByUserID: newPermissionsByUserIDLoader(db),
+				UserByID:         newUserByIDLoader(db),
+				UsersByCompanyID: newUsersByCompanyIDLoader(db),
+				CompanyByID:      newCompanyByIDLoader(db),
+				CompanyByUserID:  newCompanyByUserIDLoader(db),
+				CompanyByCode:    newCompanyByCodeLoader(db),
+				RolesByUserID:    newRoleByUserIDLoader(db),
+				//PermissionByUserID: newPermissionsByUserIDLoader(db),
 			}
 
 			ctx := context.WithValue(

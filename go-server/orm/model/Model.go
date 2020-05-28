@@ -1,3 +1,6 @@
+/*
+Package model is responsible for the models
+*/
 package model
 
 import (
@@ -21,6 +24,7 @@ type Model struct {
 	UpdatedAt time.Time
 }
 
+// IDstring returns the ID as a hash string
 func (m ModelSoftDelete) IDstring() string {
 	id, err := hide.ToString(m.ID)
 	if err != nil || id == "null" {
@@ -29,10 +33,21 @@ func (m ModelSoftDelete) IDstring() string {
 	return id
 }
 
+// IDint returns the ID as an int64
+func (m ModelSoftDelete) IDint() int64 {
+	return int64(m.ID)
+}
+
+// IDstring returns the ID as a hash string
 func (m Model) IDstring() string {
 	id, err := hide.ToString(m.ID)
 	if err != nil || id == "null" {
 		return ""
 	}
 	return id
+}
+
+// IDint returns the ID as an int64
+func (m Model) IDint() int64 {
+	return int64(m.ID)
 }

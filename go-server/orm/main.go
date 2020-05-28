@@ -21,9 +21,15 @@ func Init(cfg *util.ServerConfig) *gorm.DB {
 		panic(err)
 	}
 
+	if cfg.Environment == "development" {
+		// clear db
+		migration.DropAll(db)
+	}
+
 	migration.AutoMigrateAll(db)
 
 	accesscontrol.EnsurePermissions(db)
+	accesscontrol.EnsureBuiltinRoles(db)
 
 	seed.RequiredUsers(db)
 

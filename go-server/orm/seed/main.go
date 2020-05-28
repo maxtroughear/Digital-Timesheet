@@ -18,6 +18,13 @@ func RequiredUsers(db *gorm.DB) {
 
 	hash, _ := auth.HashPassword("servicepass")
 
+	var serviceAdminRole model.BuiltinRole
+
+	// get service admin role
+	db.Where(model.BuiltinRole{
+		Name: "Service Admin",
+	}).First(&serviceAdminRole)
+
 	var user model.User
 
 	db.Where(model.User{
@@ -26,5 +33,8 @@ func RequiredUsers(db *gorm.DB) {
 	}).Attrs(model.User{
 		Username: "serviceadmin",
 		Password: hash,
+		BuiltinRoles: []model.BuiltinRole{
+			serviceAdminRole,
+		},
 	}).FirstOrCreate(&user)
 }

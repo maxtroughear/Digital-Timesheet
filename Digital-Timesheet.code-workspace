@@ -37,7 +37,6 @@
     ],
     "editor.codeActionsOnSaveTimeout": 3000,
     "go.useLanguageServer": true,
-    "go.autocompleteUnimportedPackages": true,
     "editor.insertSpaces": true,
     "editor.tabSize": 2,
     "[javascript]": {
@@ -63,16 +62,15 @@
       "editor.insertSpaces": false,
       // Optional: Disable snippets, as they conflict with completion ranking.
       "editor.snippetSuggestions": "none",
+      "files.eol": "\n"
     },
     "[go.mod]": {
       "editor.formatOnSave": true,
       "editor.codeActionsOnSave": {
-        "source.organizeImports": false,
+        "source.organizeImports": true,
       },
       "editor.tabSize": 4,
       "editor.insertSpaces": false,
-      // Optional: Disable snippets, as they conflict with completion ranking.
-      "editor.snippetSuggestions": "none",
     },
     "gopls": {
       // Add parameter placeholders when completing a function.
@@ -95,6 +93,12 @@
       // "licenses": true,
       // "reverse-proxy": true,
       // "node-server": true
-    }
-  }
+    },
+    "go.languageServerExperimentalFeatures": {
+      "format": true,
+      "diagnostics": true,
+      "documentLink": false
+    },
+    "go.buildOnSave": "off",
+  },
 }

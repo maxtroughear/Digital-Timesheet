@@ -76,9 +76,10 @@ type ComplexityRoot struct {
 		Company          func(childComplexity int, id *hide.ID) int
 		Login            func(childComplexity int, code string, username string, password string, twoFactor *string) int
 		LoginSecure      func(childComplexity int, password string) int
+		Me               func(childComplexity int) int
 		Test             func(childComplexity int) int
 		TwoFactorBackups func(childComplexity int) int
-		User             func(childComplexity int, id *hide.ID) int
+		User             func(childComplexity int, id hide.ID) int
 		Version          func(childComplexity int) int
 	}
 
@@ -106,7 +107,8 @@ type QueryResolver interface {
 	LoginSecure(ctx context.Context, password string) (string, error)
 	TwoFactorBackups(ctx context.Context) ([]string, error)
 	Company(ctx context.Context, id *hide.ID) (*model.Company, error)
-	User(ctx context.Context, id *hide.ID) (*model.User, error)
+	Me(ctx context.Context) (*model.User, error)
+	User(ctx context.Context, id hide.ID) (*model.User, error)
 }
 type UserResolver interface {
 	Company(ctx context.Context, obj *model.User) (*model.Company, error)
@@ -267,6 +269,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.LoginSecure(childComplexity, args["password"].(string)), true
 
+	case "Query.me":
+		if e.complexity.Query.Me == nil {
+			break
+		}
+
+		return e.complexity.Query.Me(childComplexity), true
+
 	case "Query.test":
 		if e.complexity.Query.Test == nil {
 			break
@@ -291,7 +300,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.User(childComplexity, args["id"].(*hide.ID)), true
+		return e.complexity.Query.User(childComplexity, args["id"].(hide.ID)), true
 
 	case "Query.version":
 		if e.complexity.Query.Version == nil {
@@ -430,7 +439,7 @@ directive @hasPerms(perms: [String!]!) on FIELD | FIELD_DEFINITION
 type Query {
   version: String!
 
-  test: String! @hasPerms(perms: ["Test:View"])
+  test: String! @hasPerms(perms: ["Test:Read"])
 }
 `, BuiltIn: false},
 	&ast.Source{Name: "graphql/schema/user.graphql", Input: `type User {
@@ -440,7 +449,8 @@ type Query {
 }
 
 extend type Query {
-  user(id: ID): User! @hasPerms(perms: ["User:View"])
+  me: User! @hasPerms(perms: ["Me:Read"])
+  user(id: ID!): User! @hasPerms(perms: ["User:Read"])
 }
 
 extend type Mutation {
@@ -638,9 +648,9 @@ func (ec *executionContext) field_Query_login_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *hide.ID
+	var arg0 hide.ID
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalOID2ᚖgithubᚗcomᚋemviᚋhideᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋemviᚋhideᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1272,7 +1282,7 @@ func (ec *executionContext) _Query_test(ctx context.Context, field graphql.Colle
 			return ec.resolvers.Query().Test(rctx)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			perms, err := ec.unmarshalNString2ᚕstringᚄ(ctx, []interface{}{"Test:View"})
+			perms, err := ec.unmarshalNString2ᚕstringᚄ(ctx, []interface{}{"Test:Read"})
 			if err != nil {
 				return nil, err
 			}
@@ -1491,6 +1501,61 @@ func (ec *executionContext) _Query_company(ctx context.Context, field graphql.Co
 	return ec.marshalNCompany2ᚖgitᚗmaxtroughearᚗdevᚋmaxᚗtroughearᚋdigitalᚑtimesheetᚋgoᚑserverᚋormᚋmodelᚐCompany(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Me(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			perms, err := ec.unmarshalNString2ᚕstringᚄ(ctx, []interface{}{"Me:Read"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPerms == nil {
+				return nil, errors.New("directive hasPerms is not implemented")
+			}
+			return ec.directives.HasPerms(ctx, nil, directive0, perms)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model.User`, tmp)
+	})
+
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgitᚗmaxtroughearᚗdevᚋmaxᚗtroughearᚋdigitalᚑtimesheetᚋgoᚑserverᚋormᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1516,10 +1581,10 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().User(rctx, args["id"].(*hide.ID))
+			return ec.resolvers.Query().User(rctx, args["id"].(hide.ID))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			perms, err := ec.unmarshalNString2ᚕstringᚄ(ctx, []interface{}{"User:View"})
+			perms, err := ec.unmarshalNString2ᚕstringᚄ(ctx, []interface{}{"User:Read"})
 			if err != nil {
 				return nil, err
 			}
@@ -2900,6 +2965,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_company(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "me":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_me(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

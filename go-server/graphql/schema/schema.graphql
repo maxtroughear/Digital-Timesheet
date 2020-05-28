@@ -12,5 +12,5 @@ directive @hasPerms(perms: [String!]!) on FIELD | FIELD_DEFINITION
 type Query {
   version: String!
 
-  test: String! @hasPerms(perms: ["Test:View"])
+  test: String! @hasPerms(perms: ["Test:Read"])
 }

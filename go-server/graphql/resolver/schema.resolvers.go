@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/graphql/generated"
 )
@@ -15,7 +14,7 @@ func (r *queryResolver) Version(ctx context.Context) (string, error) {
 }
 
 func (r *queryResolver) Test(ctx context.Context) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	return "Test response", nil
 }
 
 // Query returns generated.QueryResolver implementation.

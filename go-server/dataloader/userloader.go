@@ -15,6 +15,11 @@ func newUserByIDLoader(db *gorm.DB) *generated.UserLoader {
 		Wait:     1 * time.Millisecond,
 		Fetch: func(ids []int64) ([]*model.User, []error) {
 			rows, err := db.Model(&model.User{}).Where(ids).Rows()
+			if err != nil {
+				rows.Close()
+				return nil, []error{err}
+			}
+
 			defer rows.Close()
 
 			if err != nil {

@@ -5,14 +5,12 @@ package generated
 import (
 	"sync"
 	"time"
-
-	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model"
 )
 
-// PermissionsLoaderConfig captures the config to create a new PermissionsLoader
-type PermissionsLoaderConfig struct {
+// PermissionLoaderConfig captures the config to create a new PermissionLoader
+type PermissionLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
-	Fetch func(keys []int64) ([][]*model.Permission, []error)
+	Fetch func(keys []int64) ([]*bool, []error)
 
 	// Wait is how long wait before sending a batch
 	Wait time.Duration
@@ -21,19 +19,19 @@ type PermissionsLoaderConfig struct {
 	MaxBatch int
 }
 
-// NewPermissionsLoader creates a new PermissionsLoader given a fetch, wait, and maxBatch
-func NewPermissionsLoader(config PermissionsLoaderConfig) *PermissionsLoader {
-	return &PermissionsLoader{
+// NewPermissionLoader creates a new PermissionLoader given a fetch, wait, and maxBatch
+func NewPermissionLoader(config PermissionLoaderConfig) *PermissionLoader {
+	return &PermissionLoader{
 		fetch:    config.Fetch,
 		wait:     config.Wait,
 		maxBatch: config.MaxBatch,
 	}
 }
 
-// PermissionsLoader batches and caches requests
-type PermissionsLoader struct {
+// PermissionLoader batches and caches requests
+type PermissionLoader struct {
 	// this method provides the data for the loader
-	fetch func(keys []int64) ([][]*model.Permission, []error)
+	fetch func(keys []int64) ([]*bool, []error)
 
 	// how long to done before sending a batch
 	wait time.Duration
@@ -44,51 +42,51 @@ type PermissionsLoader struct {
 	// INTERNAL
 
 	// lazily created cache
-	cache map[int64][]*model.Permission
+	cache map[int64]*bool
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
-	batch *permissionsLoaderBatch
+	batch *permissionLoaderBatch
 
 	// mutex to prevent races
 	mu sync.Mutex
 }
 
-type permissionsLoaderBatch struct {
+type permissionLoaderBatch struct {
 	keys    []int64
-	data    [][]*model.Permission
+	data    []*bool
 	error   []error
 	closing bool
 	done    chan struct{}
 }
 
-// Load a Permission by key, batching and caching will be applied automatically
-func (l *PermissionsLoader) Load(key int64) ([]*model.Permission, error) {
+// Load a bool by key, batching and caching will be applied automatically
+func (l *PermissionLoader) Load(key int64) (*bool, error) {
 	return l.LoadThunk(key)()
 }
 
-// LoadThunk returns a function that when called will block waiting for a Permission.
+// LoadThunk returns a function that when called will block waiting for a bool.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *PermissionsLoader) LoadThunk(key int64) func() ([]*model.Permission, error) {
+func (l *PermissionLoader) LoadThunk(key int64) func() (*bool, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
-		return func() ([]*model.Permission, error) {
+		return func() (*bool, error) {
 			return it, nil
 		}
 	}
 	if l.batch == nil {
-		l.batch = &permissionsLoaderBatch{done: make(chan struct{})}
+		l.batch = &permissionLoaderBatch{done: make(chan struct{})}
 	}
 	batch := l.batch
 	pos := batch.keyIndex(l, key)
 	l.mu.Unlock()
 
-	return func() ([]*model.Permission, error) {
+	return func() (*bool, error) {
 		<-batch.done
 
-		var data []*model.Permission
+		var data *bool
 		if pos < len(batch.data) {
 			data = batch.data[pos]
 		}
@@ -113,73 +111,72 @@ func (l *PermissionsLoader) LoadThunk(key int64) func() ([]*model.Permission, er
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *PermissionsLoader) LoadAll(keys []int64) ([][]*model.Permission, []error) {
-	results := make([]func() ([]*model.Permission, error), len(keys))
+func (l *PermissionLoader) LoadAll(keys []int64) ([]*bool, []error) {
+	results := make([]func() (*bool, error), len(keys))
 
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
 
-	permissions := make([][]*model.Permission, len(keys))
+	bools := make([]*bool, len(keys))
 	errors := make([]error, len(keys))
 	for i, thunk := range results {
-		permissions[i], errors[i] = thunk()
+		bools[i], errors[i] = thunk()
 	}
-	return permissions, errors
+	return bools, errors
 }
 
-// LoadAllThunk returns a function that when called will block waiting for a Permissions.
+// LoadAllThunk returns a function that when called will block waiting for a bools.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *PermissionsLoader) LoadAllThunk(keys []int64) func() ([][]*model.Permission, []error) {
-	results := make([]func() ([]*model.Permission, error), len(keys))
+func (l *PermissionLoader) LoadAllThunk(keys []int64) func() ([]*bool, []error) {
+	results := make([]func() (*bool, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
-	return func() ([][]*model.Permission, []error) {
-		permissions := make([][]*model.Permission, len(keys))
+	return func() ([]*bool, []error) {
+		bools := make([]*bool, len(keys))
 		errors := make([]error, len(keys))
 		for i, thunk := range results {
-			permissions[i], errors[i] = thunk()
+			bools[i], errors[i] = thunk()
 		}
-		return permissions, errors
+		return bools, errors
 	}
 }
 
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *PermissionsLoader) Prime(key int64, value []*model.Permission) bool {
+func (l *PermissionLoader) Prime(key int64, value *bool) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
 		// make a copy when writing to the cache, its easy to pass a pointer in from a loop var
 		// and end up with the whole cache pointing to the same value.
-		cpy := make([]*model.Permission, len(value))
-		copy(cpy, value)
-		l.unsafeSet(key, cpy)
+		cpy := *value
+		l.unsafeSet(key, &cpy)
 	}
 	l.mu.Unlock()
 	return !found
 }
 
 // Clear the value at key from the cache, if it exists
-func (l *PermissionsLoader) Clear(key int64) {
+func (l *PermissionLoader) Clear(key int64) {
 	l.mu.Lock()
 	delete(l.cache, key)
 	l.mu.Unlock()
 }
 
-func (l *PermissionsLoader) unsafeSet(key int64, value []*model.Permission) {
+func (l *PermissionLoader) unsafeSet(key int64, value *bool) {
 	if l.cache == nil {
-		l.cache = map[int64][]*model.Permission{}
+		l.cache = map[int64]*bool{}
 	}
 	l.cache[key] = value
 }
 
 // keyIndex will return the location of the key in the batch, if its not found
 // it will add the key to the batch
-func (b *permissionsLoaderBatch) keyIndex(l *PermissionsLoader, key int64) int {
+func (b *permissionLoaderBatch) keyIndex(l *PermissionLoader, key int64) int {
 	for i, existingKey := range b.keys {
 		if key == existingKey {
 			return i
@@ -203,7 +200,7 @@ func (b *permissionsLoaderBatch) keyIndex(l *PermissionsLoader, key int64) int {
 	return pos
 }
 
-func (b *permissionsLoaderBatch) startTimer(l *PermissionsLoader) {
+func (b *permissionLoaderBatch) startTimer(l *PermissionLoader) {
 	time.Sleep(l.wait)
 	l.mu.Lock()
 
@@ -219,7 +216,7 @@ func (b *permissionsLoaderBatch) startTimer(l *PermissionsLoader) {
 	b.end(l)
 }
 
-func (b *permissionsLoaderBatch) end(l *PermissionsLoader) {
+func (b *permissionLoaderBatch) end(l *PermissionLoader) {
 	b.data, b.error = l.fetch(b.keys)
 	close(b.done)
 }

@@ -19,12 +19,12 @@ func (r *mutationResolver) CreateUser(ctx context.Context, code string, username
 	company, err := dataloader.For(ctx).CompanyByCode.Load(code)
 
 	if err != nil {
-		return nil, fmt.Errorf("Unable to create User. Company not found")
+		return nil, fmt.Errorf("unable to create User. Company not found")
 	}
 
 	hash, err := auth.HashPassword(password)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to create User. Password invalid")
+		return nil, fmt.Errorf("unable to create User. Password invalid")
 	}
 
 	var user = model.User{
@@ -34,19 +34,18 @@ func (r *mutationResolver) CreateUser(ctx context.Context, code string, username
 	}
 
 	if err := r.DB.Create(&user).Error; err != nil {
-		return nil, fmt.Errorf("Unable to create User. Already exists")
+		return nil, fmt.Errorf("unable to create User. Already exists")
 	}
 
 	return &user, nil
 }
 
-func (r *queryResolver) User(ctx context.Context, id *hide.ID) (*model.User, error) {
-	if id == nil || *id == 0 {
-		// get user from auth context
-		return auth.For(ctx).User, nil
-	}
+func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
+	return auth.For(ctx).User, nil
+}
 
-	user, err := dataloader.For(ctx).UserByID.Load(int64(*id))
+func (r *queryResolver) User(ctx context.Context, id hide.ID) (*model.User, error) {
+	user, err := dataloader.For(ctx).UserByID.Load(int64(id))
 
 	return user, err
 }

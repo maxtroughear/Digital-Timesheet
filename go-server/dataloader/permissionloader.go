@@ -1,38 +1,38 @@
 package dataloader
 
-import (
-	"time"
+// import (
+// 	"time"
 
-	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/dataloader/generated"
-	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model"
-	"github.com/emvi/hide"
-	"github.com/jinzhu/gorm"
-)
+// 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/dataloader/generated"
+// 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model"
+// 	"github.com/jinzhu/gorm"
+// )
 
-func newPermissionsByUserIDLoader(db *gorm.DB) *generated.PermissionsLoader {
-	return generated.NewPermissionsLoader(generated.PermissionsLoaderConfig{
-		MaxBatch: 50,
-		Wait:     1 * time.Millisecond,
-		Fetch: func(userIDs []int64) ([][]*model.Permission, []error) {
-			var perms [][]*model.Permission
-			var errs []error
+// func newPermissionCheckerByIDLoader(db *gorm.DB) *generated.PermissionChecker {
+// 	return generated.NewPermissionChecker(generated.PermissionCheckerConfig{
+// 		MaxBatch: 200,
+// 		Wait: 1 * time.Millisecond,
+// 		Fetch: func(keys []int64) ([]*bool, []error) {
+// 			success := make([]*bool, len(keys))
+// 			errors := make([]error, len(keys))
 
-			for i, userID := range userIDs {
-				var permissions []*model.Permission
-				err := db.Model(&model.User{
-					ModelSoftDelete: model.ModelSoftDelete{
-						ID: hide.ID(userID),
-					},
-				}).Related(&permissions, "Permissions").Error
+// 			for i, key := range keys {
+// 				var builtinRoles []*model.BuiltinRole
+// 				err := db.Model(&model.User{
+// 					ModelSoftDelete: model.ModelSoftDelete{
+// 						ID: hide.ID(key),
+// 					},
+// 				}).Related(builtinRoles, "BuiltinRoles")
 
-				if err != nil {
-					errs[i] = err
-					continue
-				}
-				perms[i] = permissions
-			}
+// 				if err != nil {
+// 					errors[i] = err
+// 					continue
+// 				}
 
-			return perms, errs
-		},
-	})
-}
+// 				for _, role := range builtinRoles {
+
+// 				}
+// 			}
+// 		}
+// 	})
+// }
