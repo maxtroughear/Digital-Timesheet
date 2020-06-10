@@ -100,5 +100,8 @@
       "documentLink": false
     },
     "go.buildOnSave": "off",
+    "cSpell.words": [
+      "dataloaden"
+    ],
   },
 }
