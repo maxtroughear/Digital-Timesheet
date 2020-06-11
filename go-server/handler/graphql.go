@@ -11,6 +11,7 @@ import (
 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/util"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/apollotracing"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
@@ -48,6 +49,7 @@ func GraphqlHandler(db *gorm.DB, cfg *util.ServerConfig) http.Handler {
 
 	if cfg.Environment == "development" {
 		gqlHandler.Use(extension.Introspection{})
+		gqlHandler.Use(apollotracing.Tracer{})
 	} else {
 		gqlHandler.Use(&extension.ComplexityLimit{
 			Func: func(ctx context.Context, rc *graphql.OperationContext) int {
