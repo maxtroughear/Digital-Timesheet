@@ -1,6 +1,12 @@
 package model
 
-import "github.com/emvi/hide"
+import (
+	"strings"
+
+	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model/permission/operation"
+	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model/permission/subject"
+	"github.com/emvi/hide"
+)
 
 // CustomRole is a group of permissions that is created for a specific company
 type CustomRole struct {
@@ -29,9 +35,20 @@ func (r CustomRole) GetPermissions() []Permission {
 
 // CheckPermission will compare a permission string (like from graphql schema)
 func (r CustomRole) CheckPermission(requestedPerm string) bool {
+	strings := strings.Split(requestedPerm, ":")
+	if len(strings) != 2 {
+		return false
+	}
+
+	var sub subject.Subject
+	var op operation.Operation
+
+	sub.FromString(strings[0])
+	op.FromString(strings[1])
+
 	// Run through permissions to check for the permission
 	for _, perm := range r.Permissions {
-		if perm.CheckPermission(requestedPerm) {
+		if perm.CheckPermission(sub, op) {
 			return true
 		}
 	}
