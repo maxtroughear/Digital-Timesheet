@@ -6,9 +6,9 @@ type Company {
 }
 
 extend type Query {
-  company(id: ID): Company!
+  company(id: ID): Company! @hasPerm(perm: "Company:Read")
 }
 
 extend type Mutation {
-  createCompany(name: String!, code: String!): Company! @isAuthenticated
+  createCompany(name: String!, code: String!): Company! @hasPerm(perm: "Company:Create")
 }

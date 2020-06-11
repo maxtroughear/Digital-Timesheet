@@ -5,10 +5,10 @@ type User {
 }
 
 extend type Query {
-  me: User! @hasPerms(perms: ["Me:Read"])
-  user(id: ID!): User! @hasPerms(perms: ["User:Read"])
+  me: User! @hasPerm(perm: "Me:Read")
+  user(id: ID!): User! @hasPerm(perm: "User:Read")
 }
 
 extend type Mutation {
-  createUser(code: String!, username: String!, password: String!): User @isAuthenticated
+  createUser(code: String!, username: String!, password: String!): User @hasPerm(perm: "User:Create")
 }

@@ -9,8 +9,10 @@ directive @isSecureAuthenticated on FIELD | FIELD_DEFINITION
 # example: @hasPerms(perms: ['Company:Edit'])
 directive @hasPerms(perms: [String!]!) on FIELD | FIELD_DEFINITION
 
+directive @hasPerm(perm: String!) on FIELD | FIELD_DEFINITION
+
 type Query {
   version: String!
 
-  test: String! @hasPerms(perms: ["Test:Read"])
+  test: String! @hasPerm(perm: "Test:Read")
 }

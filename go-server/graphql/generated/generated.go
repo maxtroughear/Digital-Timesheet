@@ -45,6 +45,7 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	HasPerm               func(ctx context.Context, obj interface{}, next graphql.Resolver, perm string) (res interface{}, err error)
 	HasPerms              func(ctx context.Context, obj interface{}, next graphql.Resolver, perms []string) (res interface{}, err error)
 	IsAuthenticated       func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 	IsSecureAuthenticated func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
@@ -423,7 +424,7 @@ extend type Query {
 }
 
 extend type Mutation {
-  createCompany(name: String!, code: String!): Company! @isAuthenticated
+  createCompany(name: String!, code: String!): Company! @hasPerm(perm: "Company:Create")
 }`, BuiltIn: false},
 	&ast.Source{Name: "graphql/schema/schema.graphql", Input: `directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
@@ -435,6 +436,8 @@ directive @isSecureAuthenticated on FIELD | FIELD_DEFINITION
 # Valid format for hasPerms: 'User:View'
 # example: @hasPerms(perms: ['Company:Edit'])
 directive @hasPerms(perms: [String!]!) on FIELD | FIELD_DEFINITION
+
+directive @hasPerm(perm: String!) on FIELD | FIELD_DEFINITION
 
 type Query {
   version: String!
@@ -454,7 +457,7 @@ extend type Query {
 }
 
 extend type Mutation {
-  createUser(code: String!, username: String!, password: String!): User @isAuthenticated
+  createUser(code: String!, username: String!, password: String!): User @hasPerms(perms: ["User:Create"])
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -462,6 +465,20 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) dir_hasPerm_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["perm"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["perm"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) dir_hasPerms_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -695,6 +712,20 @@ func (ec *executionContext) _fieldMiddleware(ctx context.Context, obj interface{
 	fc := graphql.GetFieldContext(ctx)
 	for _, d := range fc.Field.Directives {
 		switch d.Name {
+		case "hasPerm":
+			rawArgs := d.ArgumentMap(ec.Variables)
+			args, err := ec.dir_hasPerm_args(ctx, rawArgs)
+			if err != nil {
+				ec.Error(ctx, err)
+				return nil
+			}
+			n := next
+			next = func(ctx context.Context) (interface{}, error) {
+				if ec.directives.HasPerm == nil {
+					return nil, errors.New("directive hasPerm is not implemented")
+				}
+				return ec.directives.HasPerm(ctx, obj, n, args["perm"].(string))
+			}
 		case "hasPerms":
 			rawArgs := d.ArgumentMap(ec.Variables)
 			args, err := ec.dir_hasPerms_args(ctx, rawArgs)
@@ -1145,10 +1176,14 @@ func (ec *executionContext) _Mutation_createCompany(ctx context.Context, field g
 			return ec.resolvers.Mutation().CreateCompany(rctx, args["name"].(string), args["code"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
+			perm, err := ec.unmarshalNString2string(ctx, "Company:Create")
+			if err != nil {
+				return nil, err
 			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0)
+			if ec.directives.HasPerm == nil {
+				return nil, errors.New("directive hasPerm is not implemented")
+			}
+			return ec.directives.HasPerm(ctx, nil, directive0, perm)
 		}
 
 		tmp, err := directive1(rctx)
@@ -1203,10 +1238,14 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 			return ec.resolvers.Mutation().CreateUser(rctx, args["code"].(string), args["username"].(string), args["password"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
+			perms, err := ec.unmarshalNString2ᚕstringᚄ(ctx, []interface{}{"User:Create"})
+			if err != nil {
+				return nil, err
 			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0)
+			if ec.directives.HasPerms == nil {
+				return nil, errors.New("directive hasPerms is not implemented")
+			}
+			return ec.directives.HasPerms(ctx, nil, directive0, perms)
 		}
 
 		tmp, err := directive1(rctx)
