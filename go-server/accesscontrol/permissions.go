@@ -19,46 +19,28 @@ func EnsureBuiltinRoles(db *gorm.DB) {
 
 func seedPermissions(db *gorm.DB) {
 	// All Permissions
-	db.FirstOrCreate(&model.Permission{}, model.Permission{
-		Subject:   subject.Any,
-		Operation: operation.Any,
-	})
+	newPerm(db, subject.Any, operation.Any)
 
 	// User object Permissions
 
 	// Me permission, allows actions related to the logged in user
-	db.FirstOrCreate(&model.Permission{}, model.Permission{
-		Subject:   subject.Me,
-		Operation: operation.Read,
-	})
-	db.FirstOrCreate(&model.Permission{}, model.Permission{
-		Subject:   subject.Me,
-		Operation: operation.Update,
-	})
+	newPerm(db, subject.Me, operation.Read)
+	newPerm(db, subject.Me, operation.Update)
 
 	// User permission, allows actions on a single user
-	db.FirstOrCreate(&model.Permission{}, model.Permission{
-		Subject:   subject.User,
-		Operation: operation.Read,
-	})
-	db.FirstOrCreate(&model.Permission{}, model.Permission{
-		Subject:   subject.User,
-		Operation: operation.Update,
-	})
-	db.FirstOrCreate(&model.Permission{}, model.Permission{
-		Subject:   subject.User,
-		Operation: operation.Create,
-	})
-	db.FirstOrCreate(&model.Permission{}, model.Permission{
-		Subject:   subject.User,
-		Operation: operation.Delete,
-	})
+	newPerm(db, subject.User, operation.Create)
+	newPerm(db, subject.User, operation.Read)
+	newPerm(db, subject.User, operation.Update)
+	newPerm(db, subject.User, operation.Delete)
 
 	// Users permission, allows actions on groups of users
-	db.FirstOrCreate(&model.Permission{}, model.Permission{
-		Subject:   subject.Users,
-		Operation: operation.Read,
-	})
+	newPerm(db, subject.Users, operation.Read)
+
+	// Company permissions
+	newPerm(db, subject.Company, operation.Create)
+	newPerm(db, subject.Company, operation.Read)
+	newPerm(db, subject.Company, operation.Update)
+	newPerm(db, subject.Company, operation.Delete)
 }
 
 func seedRoles(db *gorm.DB) {
@@ -84,4 +66,11 @@ func seedRoles(db *gorm.DB) {
 		},
 	}).FirstOrCreate(&serviceAdminRole)
 
+}
+
+func newPerm(db *gorm.DB, subject subject.Subject, operation operation.Operation) {
+	db.FirstOrCreate(&model.Permission{}, model.Permission{
+		Subject:   subject,
+		Operation: operation,
+	})
 }

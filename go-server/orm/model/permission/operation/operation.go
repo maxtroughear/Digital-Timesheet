@@ -1,6 +1,9 @@
 package operation
 
-import "database/sql/driver"
+import (
+	"database/sql/driver"
+	"fmt"
+)
 
 // Operation is an enum representing the operation on a permission
 type Operation int64
@@ -47,4 +50,14 @@ func (o Operation) Value() (driver.Value, error) {
 
 func (o Operation) String() string {
 	return operationTypeStrings[o]
+}
+
+func (o *Operation) FromString(value string) error {
+	for i, operationString := range operationTypeStrings {
+		if value == operationString {
+			*o = Operation(int64(i))
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid operation string")
 }
