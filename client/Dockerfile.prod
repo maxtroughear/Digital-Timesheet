@@ -3,6 +3,10 @@ FROM node:lts-slim as build
 ARG REACT_APP_API_URI
 ENV REACT_APP_API_URI $REACT_APP_API_URI
 
+ENV SKIP_PREFLIGHT_CHECK true
+
+ENV SCARF_ANALYTICS false
+
 WORKDIR /usr/src/app
 
 COPY package.json /usr/src/app/
