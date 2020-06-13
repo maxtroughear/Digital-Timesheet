@@ -10,15 +10,15 @@ import (
 
 func newCompanyByIDLoader(db *gorm.DB) *generated.CompanyLoader {
 	return generated.NewCompanyLoader(generated.CompanyLoaderConfig{
-		MaxBatch: 100,
+		MaxBatch: 1000,
 		Wait:     1 * time.Millisecond,
 		Fetch: func(ids []int64) ([]*model.Company, []error) {
 			rows, err := db.Model(&model.Company{}).Where(ids).Rows()
-			defer rows.Close()
 
 			if err != nil {
 				return nil, []error{err}
 			}
+			defer rows.Close()
 
 			// map
 			companyByID := map[int64]*model.Company{}
@@ -43,16 +43,16 @@ func newCompanyByIDLoader(db *gorm.DB) *generated.CompanyLoader {
 
 func newCompanyByUserIDLoader(db *gorm.DB) *generated.CompanyLoader {
 	return generated.NewCompanyLoader(generated.CompanyLoaderConfig{
-		MaxBatch: 100,
+		MaxBatch: 1000,
 		Wait:     1 * time.Millisecond,
 		Fetch: func(userIDs []int64) ([]*model.Company, []error) {
 			// get users
 			userRows, err := db.Model(&model.User{}).Select("id, company_id").Where(userIDs).Rows()
-			defer userRows.Close()
 
 			if err != nil {
 				return nil, []error{err}
 			}
+			defer userRows.Close()
 
 			// map user IDs to company IDs and company IDs to nil
 			// map to nil so that we only get unique companies from DB
@@ -108,15 +108,15 @@ func newCompanyByUserIDLoader(db *gorm.DB) *generated.CompanyLoader {
 
 func newCompanyByCodeLoader(db *gorm.DB) *generated.CompanyStringLoader {
 	return generated.NewCompanyStringLoader(generated.CompanyStringLoaderConfig{
-		MaxBatch: 100,
+		MaxBatch: 1000,
 		Wait:     1 * time.Millisecond,
 		Fetch: func(companyCodes []string) ([]*model.Company, []error) {
 			rows, err := db.Model(&model.Company{}).Where("code IN (?)", companyCodes).Rows()
-			defer rows.Close()
 
 			if err != nil {
 				return nil, []error{err}
 			}
+			defer rows.Close()
 
 			// map
 			companyByCode := map[string]*model.Company{}

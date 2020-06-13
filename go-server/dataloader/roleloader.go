@@ -11,7 +11,7 @@ import (
 
 func newRoleByUserIDLoader(db *gorm.DB) *generated.RoleLoader {
 	return generated.NewRoleLoader(generated.RoleLoaderConfig{
-		MaxBatch: 200,
+		MaxBatch: 1000,
 		Wait:     1 * time.Millisecond,
 		Fetch: func(keys []int64) ([][]model.Role, []error) {
 			roles := make([][]model.Role, len(keys))

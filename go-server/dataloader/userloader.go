@@ -11,12 +11,12 @@ import (
 
 func newUserByIDLoader(db *gorm.DB) *generated.UserLoader {
 	return generated.NewUserLoader(generated.UserLoaderConfig{
-		MaxBatch: 100,
+		MaxBatch: 1000,
 		Wait:     1 * time.Millisecond,
 		Fetch: func(ids []int64) ([]*model.User, []error) {
 			rows, err := db.Model(&model.User{}).Where(ids).Rows()
+
 			if err != nil {
-				rows.Close()
 				return nil, []error{err}
 			}
 
@@ -49,7 +49,7 @@ func newUserByIDLoader(db *gorm.DB) *generated.UserLoader {
 
 func newUsersByCompanyIDLoader(db *gorm.DB) *generated.UserSliceLoader {
 	return generated.NewUserSliceLoader(generated.UserSliceLoaderConfig{
-		MaxBatch: 100,
+		MaxBatch: 1000,
 		Wait:     1 * time.Millisecond,
 		Fetch: func(companyIDs []int64) ([][]*model.User, []error) {
 			var companyUsers [][]*model.User
