@@ -16,7 +16,8 @@ services:
       context: ./client
       dockerfile: Dockerfile
     environment: 
-      NODE_ENV: development
+      REACT_APP_API_URI: /api/
+      SKIP_PREFLIGHT_CHECK: 'true'
     stdin_open: true
 
   reverse-proxy:

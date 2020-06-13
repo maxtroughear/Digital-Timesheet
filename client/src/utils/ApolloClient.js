@@ -23,7 +23,7 @@ const authMiddleware = new ApolloLink((operation, forward) => {
 });
 
 const httpLink = new HttpLink({
-  uri: '/api/',
+  uri: process.env.REACT_APP_API_URI,
 });
 
 const client = new ApolloClient({
