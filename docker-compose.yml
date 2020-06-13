@@ -7,6 +7,7 @@ services:
       POSTGRES_HOST: db
       APP_VERSION: 0.0.0
       PORT: 3000
+    restart: always
 
   frontend:
     environment: 
