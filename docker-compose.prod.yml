@@ -14,7 +14,7 @@ services:
     image: ${CI_APPLICATION_REPOSITORY}-frontend:${VERSION}
     environment:
       PRODUCTION: 'true'
-      API_URI: /api/
+      REACT_APP_API_URI: /api/
 
   reverse-proxy:
     image: ${CI_APPLICATION_REPOSITORY}-reverse-proxy:${VERSION}
