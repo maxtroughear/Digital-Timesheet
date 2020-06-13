@@ -70,13 +70,13 @@ type ComplexityRoot struct {
 		CreateUser          func(childComplexity int, code string, username string, password string) int
 		DisableTwoFactor    func(childComplexity int, password string) int
 		EnableTwoFactor     func(childComplexity int, secret string, token string) int
+		Login               func(childComplexity int, code string, username string, password string, twoFactor *string) int
+		LoginSecure         func(childComplexity int, password string) int
 		NewTwoFactorBackups func(childComplexity int) int
 	}
 
 	Query struct {
 		Company          func(childComplexity int, id *hide.ID) int
-		Login            func(childComplexity int, code string, username string, password string, twoFactor *string) int
-		LoginSecure      func(childComplexity int, password string) int
 		Me               func(childComplexity int) int
 		Test             func(childComplexity int) int
 		TwoFactorBackups func(childComplexity int) int
@@ -95,6 +95,8 @@ type CompanyResolver interface {
 	Users(ctx context.Context, obj *model.Company) ([]*model.User, error)
 }
 type MutationResolver interface {
+	Login(ctx context.Context, code string, username string, password string, twoFactor *string) (*modelgen.AuthData, error)
+	LoginSecure(ctx context.Context, password string) (string, error)
 	NewTwoFactorBackups(ctx context.Context) ([]string, error)
 	EnableTwoFactor(ctx context.Context, secret string, token string) ([]string, error)
 	DisableTwoFactor(ctx context.Context, password string) (bool, error)
@@ -104,8 +106,6 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Version(ctx context.Context) (string, error)
 	Test(ctx context.Context) (string, error)
-	Login(ctx context.Context, code string, username string, password string, twoFactor *string) (*modelgen.AuthData, error)
-	LoginSecure(ctx context.Context, password string) (string, error)
 	TwoFactorBackups(ctx context.Context) ([]string, error)
 	Company(ctx context.Context, id *hide.ID) (*model.Company, error)
 	Me(ctx context.Context) (*model.User, error)
@@ -227,6 +227,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.EnableTwoFactor(childComplexity, args["secret"].(string), args["token"].(string)), true
 
+	case "Mutation.login":
+		if e.complexity.Mutation.Login == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_login_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Login(childComplexity, args["code"].(string), args["username"].(string), args["password"].(string), args["twoFactor"].(*string)), true
+
+	case "Mutation.loginSecure":
+		if e.complexity.Mutation.LoginSecure == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_loginSecure_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.LoginSecure(childComplexity, args["password"].(string)), true
+
 	case "Mutation.newTwoFactorBackups":
 		if e.complexity.Mutation.NewTwoFactorBackups == nil {
 			break
@@ -245,30 +269,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Company(childComplexity, args["id"].(*hide.ID)), true
-
-	case "Query.login":
-		if e.complexity.Query.Login == nil {
-			break
-		}
-
-		args, err := ec.field_Query_login_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Login(childComplexity, args["code"].(string), args["username"].(string), args["password"].(string), args["twoFactor"].(*string)), true
-
-	case "Query.loginSecure":
-		if e.complexity.Query.LoginSecure == nil {
-			break
-		}
-
-		args, err := ec.field_Query_loginSecure_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.LoginSecure(childComplexity, args["password"].(string)), true
 
 	case "Query.me":
 		if e.complexity.Query.Me == nil {
@@ -402,12 +402,12 @@ var sources = []*ast.Source{
 }
 
 extend type Query {
-  login(code: String!, username: String!, password: String!, twoFactor: String): AuthData!
-  loginSecure(password: String!): String! @isAuthenticated
   twoFactorBackups: [String!]! @isSecureAuthenticated
 }
 
 extend type Mutation {
+  login(code: String!, username: String!, password: String!, twoFactor: String): AuthData!
+  loginSecure(password: String!): String! @isAuthenticated
   newTwoFactorBackups: [String!]! @isSecureAuthenticated
   enableTwoFactor(secret: String!, token: String!): [String!]! @isSecureAuthenticated
   disableTwoFactor(password: String!): Boolean! @isAuthenticated
@@ -420,7 +420,7 @@ extend type Mutation {
 }
 
 extend type Query {
-  company(id: ID): Company!
+  company(id: ID): Company! @hasPerm(perm: "Company:Read")
 }
 
 extend type Mutation {
@@ -442,7 +442,7 @@ directive @hasPerm(perm: String!) on FIELD | FIELD_DEFINITION
 type Query {
   version: String!
 
-  test: String! @hasPerms(perms: ["Test:Read"])
+  test: String! @hasPerm(perm: "Test:Read")
 }
 `, BuiltIn: false},
 	&ast.Source{Name: "graphql/schema/user.graphql", Input: `type User {
@@ -452,12 +452,12 @@ type Query {
 }
 
 extend type Query {
-  me: User! @hasPerms(perms: ["Me:Read"])
-  user(id: ID!): User! @hasPerms(perms: ["User:Read"])
+  me: User! @hasPerm(perm: "Me:Read")
+  user(id: ID!): User! @hasPerm(perm: "User:Read")
 }
 
 extend type Mutation {
-  createUser(code: String!, username: String!, password: String!): User @hasPerms(perms: ["User:Create"])
+  createUser(code: String!, username: String!, password: String!): User @hasPerm(perm: "User:Create")
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -582,35 +582,7 @@ func (ec *executionContext) field_Mutation_enableTwoFactor_args(ctx context.Cont
 	return args, nil
 }
 
-func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["name"]; ok {
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["name"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_company_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *hide.ID
-	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalOID2ᚖgithubᚗcomᚋemviᚋhideᚐID(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_loginSecure_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_loginSecure_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -624,7 +596,7 @@ func (ec *executionContext) field_Query_loginSecure_args(ctx context.Context, ra
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_login_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -659,6 +631,34 @@ func (ec *executionContext) field_Query_login_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["twoFactor"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["name"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_company_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *hide.ID
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalOID2ᚖgithubᚗcomᚋemviᚋhideᚐID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -981,6 +981,102 @@ func (ec *executionContext) _Company_users(ctx context.Context, field graphql.Co
 	return ec.marshalNUser2ᚕᚖgitᚗmaxtroughearᚗdevᚋmaxᚗtroughearᚋdigitalᚑtimesheetᚋgoᚑserverᚋormᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_login_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Login(rctx, args["code"].(string), args["username"].(string), args["password"].(string), args["twoFactor"].(*string))
+	})
+
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*modelgen.AuthData)
+	fc.Result = res
+	return ec.marshalNAuthData2ᚖgitᚗmaxtroughearᚗdevᚋmaxᚗtroughearᚋdigitalᚑtimesheetᚋgoᚑserverᚋgraphqlᚋmodelgenᚐAuthData(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_loginSecure(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_loginSecure_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().LoginSecure(rctx, args["password"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_newTwoFactorBackups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1238,14 +1334,14 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 			return ec.resolvers.Mutation().CreateUser(rctx, args["code"].(string), args["username"].(string), args["password"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			perms, err := ec.unmarshalNString2ᚕstringᚄ(ctx, []interface{}{"User:Create"})
+			perm, err := ec.unmarshalNString2string(ctx, "User:Create")
 			if err != nil {
 				return nil, err
 			}
-			if ec.directives.HasPerms == nil {
-				return nil, errors.New("directive hasPerms is not implemented")
+			if ec.directives.HasPerm == nil {
+				return nil, errors.New("directive hasPerm is not implemented")
 			}
-			return ec.directives.HasPerms(ctx, nil, directive0, perms)
+			return ec.directives.HasPerm(ctx, nil, directive0, perm)
 		}
 
 		tmp, err := directive1(rctx)
@@ -1321,110 +1417,14 @@ func (ec *executionContext) _Query_test(ctx context.Context, field graphql.Colle
 			return ec.resolvers.Query().Test(rctx)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			perms, err := ec.unmarshalNString2ᚕstringᚄ(ctx, []interface{}{"Test:Read"})
+			perm, err := ec.unmarshalNString2string(ctx, "Test:Read")
 			if err != nil {
 				return nil, err
 			}
-			if ec.directives.HasPerms == nil {
-				return nil, errors.New("directive hasPerms is not implemented")
+			if ec.directives.HasPerm == nil {
+				return nil, errors.New("directive hasPerm is not implemented")
 			}
-			return ec.directives.HasPerms(ctx, nil, directive0, perms)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_login(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_login_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Login(rctx, args["code"].(string), args["username"].(string), args["password"].(string), args["twoFactor"].(*string))
-	})
-
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*modelgen.AuthData)
-	fc.Result = res
-	return ec.marshalNAuthData2ᚖgitᚗmaxtroughearᚗdevᚋmaxᚗtroughearᚋdigitalᚑtimesheetᚋgoᚑserverᚋgraphqlᚋmodelgenᚐAuthData(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_loginSecure(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_loginSecure_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().LoginSecure(rctx, args["password"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0)
+			return ec.directives.HasPerm(ctx, nil, directive0, perm)
 		}
 
 		tmp, err := directive1(rctx)
@@ -1525,8 +1525,32 @@ func (ec *executionContext) _Query_company(ctx context.Context, field graphql.Co
 	}
 	fc.Args = args
 	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Company(rctx, args["id"].(*hide.ID))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Company(rctx, args["id"].(*hide.ID))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			perm, err := ec.unmarshalNString2string(ctx, "Company:Read")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPerm == nil {
+				return nil, errors.New("directive hasPerm is not implemented")
+			}
+			return ec.directives.HasPerm(ctx, nil, directive0, perm)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Company); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model.Company`, tmp)
 	})
 
 	if resTmp == nil {
@@ -1561,14 +1585,14 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 			return ec.resolvers.Query().Me(rctx)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			perms, err := ec.unmarshalNString2ᚕstringᚄ(ctx, []interface{}{"Me:Read"})
+			perm, err := ec.unmarshalNString2string(ctx, "Me:Read")
 			if err != nil {
 				return nil, err
 			}
-			if ec.directives.HasPerms == nil {
-				return nil, errors.New("directive hasPerms is not implemented")
+			if ec.directives.HasPerm == nil {
+				return nil, errors.New("directive hasPerm is not implemented")
 			}
-			return ec.directives.HasPerms(ctx, nil, directive0, perms)
+			return ec.directives.HasPerm(ctx, nil, directive0, perm)
 		}
 
 		tmp, err := directive1(rctx)
@@ -1623,14 +1647,14 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 			return ec.resolvers.Query().User(rctx, args["id"].(hide.ID))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			perms, err := ec.unmarshalNString2ᚕstringᚄ(ctx, []interface{}{"User:Read"})
+			perm, err := ec.unmarshalNString2string(ctx, "User:Read")
 			if err != nil {
 				return nil, err
 			}
-			if ec.directives.HasPerms == nil {
-				return nil, errors.New("directive hasPerms is not implemented")
+			if ec.directives.HasPerm == nil {
+				return nil, errors.New("directive hasPerm is not implemented")
 			}
-			return ec.directives.HasPerms(ctx, nil, directive0, perms)
+			return ec.directives.HasPerm(ctx, nil, directive0, perm)
 		}
 
 		tmp, err := directive1(rctx)
@@ -2877,6 +2901,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "login":
+			out.Values[i] = ec._Mutation_login(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "loginSecure":
+			out.Values[i] = ec._Mutation_loginSecure(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "newTwoFactorBackups":
 			out.Values[i] = ec._Mutation_newTwoFactorBackups(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -2948,34 +2982,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_test(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "login":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_login(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "loginSecure":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_loginSecure(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

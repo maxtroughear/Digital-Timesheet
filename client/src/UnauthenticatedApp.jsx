@@ -1,14 +1,14 @@
 /** @jsx jsx */
 /** @jsxFrag React.Fragment */
 import { jsx } from '@emotion/core';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import { amber, green, red } from '@material-ui/core/colors';
 import {
   Button, Paper, TextField, Typography, CircularProgress, Collapse, Grow,
 } from '@material-ui/core';
-import { useApolloClient, useLazyQuery } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 
 import SnackbarAlert from 'components/SnackbarAlert';
 
@@ -66,7 +66,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const UnauthenticatedApp = () => {
-  const client = useApolloClient();
+  // const client = useApolloClient();
   const classes = useStyles();
 
   const [incorrectOpen, setIncorrectOpen] = useState(false);
@@ -79,24 +79,24 @@ const UnauthenticatedApp = () => {
   const [success, setSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const [loginQuery, {
-    data, loading,
-  }] = useLazyQuery(LOGIN, {
-    fetchPolicy: 'network-only',
+  const [loginMutation, {
+    data, loading, client,
+  }] = useMutation(LOGIN, {
+    fetchPolicy: 'no-cache',
     errorPolicy: 'none',
-    onCompleted({ login }) {
+    onCompleted: useCallback(({ login }) => {
       if (login.twoFactorEnabled && !login.token) {
         setTwoFactorEnabledOpen(true);
         setTwoFactorEnabled(true);
-        return;
+      } else {
+        setSuccess(true);
+        localStorage.setItem(localStorageKey, login.token);
       }
-      setSuccess(true);
-      localStorage.setItem(localStorageKey, login.token);
-    },
-    onError(e) {
+    }, []),
+    onError: useCallback((e) => {
       setErrorMessage(e.message.replace('GraphQL error: ', ''));
       setIncorrectOpen(true);
-    },
+    }, []),
   });
 
   const handleLoginExited = () => {
@@ -128,7 +128,7 @@ const UnauthenticatedApp = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     if (!loading && !success) {
-      loginQuery({
+      loginMutation({
         variables: {
           company,
           username,

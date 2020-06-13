@@ -14,19 +14,9 @@ import (
 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model"
 )
 
-func (r *mutationResolver) NewTwoFactorBackups(ctx context.Context) ([]string, error) {
-	panic(fmt.Errorf("not implemented"))
-}
+func (r *mutationResolver) Login(ctx context.Context, code string, username string, password string, twoFactor *string) (*modelgen.AuthData, error) {
+	// TODO: move logic into auth package
 
-func (r *mutationResolver) EnableTwoFactor(ctx context.Context, secret string, token string) ([]string, error) {
-	return auth.EnableTwoFactor(r.DB, auth.For(ctx).User, secret, token)
-}
-
-func (r *mutationResolver) DisableTwoFactor(ctx context.Context, password string) (bool, error) {
-	return auth.DisableTwoFactor(r.DB, auth.For(ctx).User, password)
-}
-
-func (r *queryResolver) Login(ctx context.Context, code string, username string, password string, twoFactor *string) (*modelgen.AuthData, error) {
 	company, err := dataloader.For(ctx).CompanyByCode.Load(code)
 
 	if err != nil || company == nil {
@@ -75,8 +65,20 @@ func (r *queryResolver) Login(ctx context.Context, code string, username string,
 	}, nil
 }
 
-func (r *queryResolver) LoginSecure(ctx context.Context, password string) (string, error) {
+func (r *mutationResolver) LoginSecure(ctx context.Context, password string) (string, error) {
 	return auth.LoginUserSecure(auth.For(ctx).User, &r.Cfg.JWT)
+}
+
+func (r *mutationResolver) NewTwoFactorBackups(ctx context.Context) ([]string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) EnableTwoFactor(ctx context.Context, secret string, token string) ([]string, error) {
+	return auth.EnableTwoFactor(r.DB, auth.For(ctx).User, secret, token)
+}
+
+func (r *mutationResolver) DisableTwoFactor(ctx context.Context, password string) (bool, error) {
+	return auth.DisableTwoFactor(r.DB, auth.For(ctx).User, password)
 }
 
 func (r *queryResolver) TwoFactorBackups(ctx context.Context) ([]string, error) {
