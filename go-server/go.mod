@@ -8,7 +8,7 @@ require (
 	github.com/dwin/goArgonPass v1.0.2
 	github.com/emvi/hide v0.0.0-20190308092726-1cc68e38b0c0
 	github.com/go-chi/chi v4.1.1+incompatible
-	github.com/jinzhu/gorm v1.9.12
+	github.com/jinzhu/gorm v1.9.13
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.5.2
 	github.com/pquerna/otp v1.2.0
