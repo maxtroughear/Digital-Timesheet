@@ -14,16 +14,17 @@ func Server() *util.ServerConfig {
 		Environment: util.MustGet("ENVIRONMENT"),
 		Port:        util.MustGet("PORT"),
 		JWT: util.JWTConfig{
-			Secret: util.MustGet("JWT_SECRET_KEY"),
+			Secret: util.MustGetSecretFromEnv("JWT_SECRET_KEY"),
 		},
 		GraphQL: util.GqlConfig{
 			ComplexityLimit: 200,
 		},
 		Database: util.DatabaseConfig{
-			Host:     util.MustGet("POSTGRES_HOST"),
-			User:     util.MustGet("POSTGRES_USER"),
-			Password: util.MustGet("POSTGRES_PASSWORD"),
-			Database: util.MustGet("POSTGRES_DB"),
+			Host:           util.MustGet("POSTGRES_HOST"),
+			User:           util.MustGet("POSTGRES_USER"),
+			Password:       util.MustGetSecretFromEnv("POSTGRES_PASSWORD"),
+			Database:       util.MustGet("POSTGRES_DB"),
+			MaxConnections: util.CanGetInt32("POSTGRES_MAX_CONNECTIONS", 20),
 		},
 	}
 }

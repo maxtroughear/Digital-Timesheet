@@ -18,8 +18,9 @@ type GqlConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host     string
-	User     string
-	Password string
-	Database string
+	Host           string
+	User           string
+	Password       string
+	Database       string
+	MaxConnections int
 }

@@ -1,3 +1,4 @@
+// Package util contains functions and structs for base configuration and more that does not fall under a specific catergory
 package util
 
 import (
@@ -5,6 +6,26 @@ import (
 	"os"
 	"strconv"
 )
+
+func CanGet(k string, def string) string {
+	v := os.Getenv(k)
+	if v == "" {
+		return def
+	}
+	return v
+}
+
+func CanGetInt32(k string, def int) int {
+	v := os.Getenv(k)
+	if v == "" {
+		return def
+	}
+	i, err := strconv.ParseInt(v, 10, 32)
+	if err != nil {
+		panic(fmt.Errorf("ENV err: [" + k + "]" + err.Error()))
+	}
+	return int(i)
+}
 
 // MustGet will return the env or panic if it is not present
 func MustGet(k string) string {
