@@ -101,7 +101,15 @@
     },
     "go.buildOnSave": "off",
     "cSpell.words": [
-      "dataloaden"
+      "PGDATA",
+      "dataloaden",
+      "dpage",
+      "pgadmin",
+      "pgtune",
+      "postgres",
+      "postgresql",
+      "structs",
+      "traefik"
     ],
   },
 }
