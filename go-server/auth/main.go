@@ -42,7 +42,14 @@ func VerifyPassword(user *model.User, password string) bool {
 
 // HashPassword attempts to hash the supplied password
 func HashPassword(password string) (string, error) {
-	return argonpass.Hash(password)
+	return argonpass.Hash(password, argonpass.ArgonParams{
+		Time:        1,
+		Memory:      64 * 1024,
+		Parallelism: 4,
+		OutputSize:  1,
+		Function:    "argon2id",
+		SaltSize:    8,
+	})
 }
 
 // Middleware decodes the authorization header
