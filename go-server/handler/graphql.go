@@ -42,6 +42,7 @@ func GraphqlHandler(db *gorm.DB, cfg *util.ServerConfig) http.Handler {
 		Cache: lru.New(200),
 	})
 
+	// access control extensions, disable as not as flexible as using directives
 	// gqlHandler.Use(ext.AccessControl{
 	// 	DB: db,
 	// 	E:  accesscontrol.Init(db),
