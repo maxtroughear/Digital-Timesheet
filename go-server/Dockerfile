@@ -16,8 +16,9 @@ RUN cp /build/main .
 FROM debian:buster-slim
 
 COPY --from=build /dist/main /
-COPY wait-for-it.sh .
-#COPY access_control_model.conf .
-RUN chmod +x ./wait-for-it.sh
+# COPY wait-for-it.sh .
+# RUN chmod +x ./wait-for-it.sh
+# COPY access_control_model.conf .
 
-CMD [ "./wait-for-it.sh", "db:5432", "--", "/main" ]
+# CMD [ "./wait-for-it.sh", "postgres:5432", "--", "/main" ]
+CMD [ "/main" ]
