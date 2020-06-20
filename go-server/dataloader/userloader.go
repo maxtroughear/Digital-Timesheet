@@ -17,9 +17,11 @@ func newUserByIDLoader(db *gorm.DB) *generated.UserLoader {
 			rows, err := db.Model(&model.User{}).Where(ids).Rows()
 
 			if err != nil {
+				if rows != nil {
+					rows.Close()
+				}
 				return nil, []error{err}
 			}
-
 			defer rows.Close()
 
 			if err != nil {
@@ -52,23 +54,31 @@ func newUsersByCompanyIDLoader(db *gorm.DB) *generated.UserSliceLoader {
 		MaxBatch: 1000,
 		Wait:     1 * time.Millisecond,
 		Fetch: func(companyIDs []int64) ([][]*model.User, []error) {
-			var companyUsers [][]*model.User
-			//var errs []error
+			companyUsers := make([][]*model.User, len(companyIDs))
+			var errs []error
 
-			for _, companyID := range companyIDs {
-				db.Model(model.Company{
+			for i, companyID := range companyIDs {
+				err := db.Model(model.Company{
 					ModelSoftDelete: model.ModelSoftDelete{
 						ID: hide.ID(companyID),
 					},
-				}).Related(&companyUsers)
+				}).Related(&companyUsers[i]).Error
+
+				if err != nil {
+					errs[i] = err
+				}
 			}
+
+			return companyUsers, errs
 
 			rows, err := db.Model(&model.User{}).Where("company_id IN (?)", companyIDs).Rows()
 
 			if err != nil {
+				if rows != nil {
+					rows.Close()
+				}
 				return nil, []error{err}
 			}
-
 			defer rows.Close()
 
 			// group by company ID

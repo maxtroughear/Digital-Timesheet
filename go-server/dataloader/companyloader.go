@@ -16,6 +16,9 @@ func newCompanyByIDLoader(db *gorm.DB) *generated.CompanyLoader {
 			rows, err := db.Model(&model.Company{}).Where(ids).Rows()
 
 			if err != nil {
+				if rows != nil {
+					rows.Close()
+				}
 				return nil, []error{err}
 			}
 			defer rows.Close()
@@ -50,6 +53,9 @@ func newCompanyByUserIDLoader(db *gorm.DB) *generated.CompanyLoader {
 			userRows, err := db.Model(&model.User{}).Select("id, company_id").Where(userIDs).Rows()
 
 			if err != nil {
+				if userRows != nil {
+					userRows.Close()
+				}
 				return nil, []error{err}
 			}
 			defer userRows.Close()
@@ -77,8 +83,12 @@ func newCompanyByUserIDLoader(db *gorm.DB) *generated.CompanyLoader {
 			companyRows, err := db.Model(&model.Company{}).Where(companyIDs).Rows()
 
 			if err != nil {
+				if companyRows != nil {
+					companyRows.Close()
+				}
 				return nil, []error{err}
 			}
+			defer companyRows.Close()
 
 			// map companies to company IDs
 
@@ -114,6 +124,9 @@ func newCompanyByCodeLoader(db *gorm.DB) *generated.CompanyStringLoader {
 			rows, err := db.Model(&model.Company{}).Where("code IN (?)", companyCodes).Rows()
 
 			if err != nil {
+				if rows != nil {
+					rows.Close()
+				}
 				return nil, []error{err}
 			}
 			defer rows.Close()
