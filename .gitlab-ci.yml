@@ -142,7 +142,7 @@ review:
     refs:
       - branches
     variables:
-      - $REVIEW_ENABLED == true
+      - $REVIEW_ENABLED == "true"
   except:
     refs:
       - master
@@ -161,7 +161,7 @@ stop_review:
     refs:
       - branches
     variables:
-      - $REVIEW_ENABLED == true
+      - $REVIEW_ENABLED == "true"
   except:
     refs:
       - master
@@ -177,7 +177,7 @@ staging:
     refs:
       - master
     variables:
-      - $STAGING_ENABLED == true
+      - $STAGING_ENABLED == "true"
 
 production:
   stage: deploy
@@ -191,7 +191,7 @@ production:
     refs:
       - master
     variables:
-      - $PRODUCTION_ENABLED == true
+      - $PRODUCTION_ENABLED == "true"
 
 
 .deploy:
