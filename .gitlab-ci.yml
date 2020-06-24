@@ -1,4 +1,4 @@
-image: node:lts-slim
+image: docker:latest
 
 variables:
   DOCKER_DRIVER: overlay2
