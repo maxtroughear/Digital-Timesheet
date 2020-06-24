@@ -5,12 +5,21 @@ services:
       context: ./go-server
       dockerfile: Dockerfile
     environment:
+      APP_VERSION: 0.0.0
+      PORT: 3000
       ENVIRONMENT: development
       JWT_SECRET_KEY: notasecretkey
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: dts
       POSTGRES_USER: dts
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: dts
-  
+      POSTGRES_MAX_CONNECTIONS: 20
+    deploy: 
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 3072M
+
   frontend:
     build:
       context: ./client
@@ -26,11 +35,47 @@ services:
     ports:
       - 80:80
 
-  db:
+  postgres:
+    image: postgres:latest
+    # command config set up from pgtune - 
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=768MB"
+      - "-c"
+      - "effective_cache_size=2304MB"
+      - "-c"
+      - "maintenance_work_mem=192MB"
+      - "-c"
+      - "checkpoint_completion_target=0.7"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "work_mem=3932kB"
+      - "-c"
+      - "min_wal_size=1GB"
+      - "-c"
+      - "max_wal_size=4GB"
     environment:
+      PGDATA: /var/lib/postgresql/data/db
+      POSTGRES_DB: dts
       POSTGRES_USER: dts
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: dts
+    volumes:
+      - pg-db:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 3072M
   
   pgadmin:
     image: dpage/pgadmin4
@@ -43,4 +88,5 @@ services:
       - "8081:80"
 
 volumes:
+  pg-db:
   pgadmin:
