@@ -53,11 +53,7 @@ func VerifyTwoFactor(t *model.TwoFactor, token string) bool {
 		}
 	}
 	// validate against secret
-	if totp.Validate(token, t.Secret) {
-		return true
-	}
-
-	return false
+	return totp.Validate(token, t.Secret)
 }
 
 func GetBackupKeys(db *gorm.DB, authCtx authContext) ([]string, error) {

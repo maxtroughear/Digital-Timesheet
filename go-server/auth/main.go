@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -28,28 +29,51 @@ type authContext struct {
 
 // LoginUser generates a signed JWT token
 func LoginUser(user *model.User, cfg *util.JWTConfig) (string, error) {
-	return buildAndSignToken(user, cfg, 0)
+	return login(user, cfg, 0)
 }
 
 func LoginUserSecure(user *model.User, cfg *util.JWTConfig) (string, error) {
+	return login(user, cfg, 1*time.Hour)
+}
+
+func login(user *model.User, cfg *util.JWTConfig, expires time.Duration) (string, error) {
+	// put into queue and wait for queue to finish
+	// this is to prevent OOM errors
+
 	return buildAndSignToken(user, cfg, 1*time.Hour)
 }
 
 // VerifyPassword verifies a password against the stored hash
 func VerifyPassword(user *model.User, password string) bool {
-	return argonpass.Verify(password, user.Password) == nil
+	start := time.Now()
+
+	err := argonpass.Verify(password, user.Password)
+
+	elapsed := time.Since(start)
+	log.Printf("Password hash verify took %s", elapsed)
+
+	return err == nil
 }
 
 // HashPassword attempts to hash the supplied password
 func HashPassword(password string) (string, error) {
-	return argonpass.Hash(password, argonpass.ArgonParams{
-		Time:        1,
-		Memory:      64 * 1024,
-		Parallelism: 4,
+	// debug check time
+
+	start := time.Now()
+
+	hash, err := argonpass.Hash(password, argonpass.ArgonParams{
+		Time:        15,
+		Memory:      48 * 1024,
+		Parallelism: 2,
 		OutputSize:  1,
 		Function:    "argon2id",
 		SaltSize:    8,
 	})
+
+	elapsed := time.Since(start)
+	log.Printf("Password hash took %s", elapsed)
+
+	return hash, err
 }
 
 // Middleware decodes the authorization header
@@ -118,7 +142,7 @@ func splitToken(header string) (string, error) {
 	splitToken := strings.Split(header, "Bearer")
 
 	if len(splitToken) != 2 || len(splitToken[1]) < 2 {
-		return "", fmt.Errorf("Bad token format")
+		return "", fmt.Errorf("bad token format")
 	}
 
 	return strings.TrimSpace(splitToken[1]), nil
