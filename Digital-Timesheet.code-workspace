@@ -102,14 +102,25 @@
     "go.buildOnSave": "off",
     "cSpell.words": [
       "PGDATA",
+      "chartjs",
+      "clsx",
       "dataloaden",
       "dpage",
+      "dwin",
+      "enriquebris",
+      "goconcurrentqueue",
+      "idhash",
+      "optimus",
       "pgadmin",
       "pgtune",
       "postgres",
       "postgresql",
+      "pquerna",
+      "roboto",
       "structs",
-      "traefik"
+      "totp",
+      "traefik",
+      "vektah"
     ],
   },
 }
