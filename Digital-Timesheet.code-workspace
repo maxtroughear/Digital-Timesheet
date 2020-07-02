@@ -9,10 +9,6 @@
       "path": "client"
     },
     {
-      "name": "Node Server",
-      "path": "node-server"
-    },
-    {
       "name": "Go Server",
       "path": "go-server"
     },
@@ -48,7 +44,7 @@
     },
     "[javascriptreact]": {
       "editor.insertSpaces": true,
-	    "editor.tabSize": 2,
+      "editor.tabSize": 2,
       "editor.codeActionsOnSave": {
         "source.fixAll": true
       },
@@ -75,7 +71,6 @@
     "gopls": {
       // Add parameter placeholders when completing a function.
       "usePlaceholders": true,
-      
       // If true, enable additional analyses with staticcheck.
       // Warning: This will significantly increase memory usage.
       "staticcheck": true,
