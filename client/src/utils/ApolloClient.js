@@ -30,7 +30,7 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
   link: from([
     createPersistedQueryLink({
-      generateHash: ({ documentId }) => documentId,
+      // generateHash: ({ documentId }) => documentId,
       useGETForHashedQueries: false,
     }),
     authMiddleware,
