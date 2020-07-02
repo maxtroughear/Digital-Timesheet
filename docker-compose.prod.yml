@@ -1,30 +1,124 @@
-version: '3'
-services: 
+version: '3.3'
+services:
   api:
-    image: ${CI_APPLICATION_REPOSITORY}-api:${VERSION}
+    image: registry.maxtroughear.dev/max.troughear/digital-timesheet/go-backend-api:stable
     environment:
-      PRODUCTION: 'true'
+      APP_VERSION: 0.0.0
+      API_PATH: /api/
+      PORT: 3000
       ENVIRONMENT: production
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-  
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt-secret
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: dts
+      POSTGRES_USER: dts
+      POSTGRES_PASSWORD_FILE: /run/secrets/db-password
+      POSTGRES_MAX_CONNECTIONS: 20
+    secrets:
+      - db-password
+      - jwt-secret
+    networks:
+      - internal
+      - cloud-edge
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1536M
+      labels:
+        traefik.enable: 'true'
+        traefik.backend: dts-api
+        traefik.docker.network: cloud-edge
+        traefik.port: '3000'
+        traefik.frontend.rule: Host:dts.maxtroughear.xyz;Path:api
+
+# auth server
+
+# file proxy server
+
   frontend:
-    image: ${CI_APPLICATION_REPOSITORY}-frontend:${VERSION}
+    image: registry.maxtroughear.dev/max.troughear/digital-timesheet/go-backend-frontend:stable
     environment:
-      PRODUCTION: 'true'
       REACT_APP_API_URI: /api/
+    networks:
+      - cloud-edge
+    deploy:
+      replicas: 1
+      labels:
+        traefik.enable: 'true'
+        traefik.backend: dts-frontend
+        traefik.docker.network: cloud-edge
+        traefik.port: '80'
+        traefik.frontend.rule: Host:dts.maxtroughear.xyz
+    
+  postgres:
+    image: postgres:latest
+    # command config set up from pgtune - 
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=768MB"
+      - "-c"
+      - "effective_cache_size=2304MB"
+      - "-c"
+      - "maintenance_work_mem=192MB"
+      - "-c"
+      - "checkpoint_completion_target=0.7"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "work_mem=3932kB"
+      - "-c"
+      - "min_wal_size=1GB"
+      - "-c"
+      - "max_wal_size=4GB"
+    environment: 
+      PGDATA: /var/lib/postgresql/data/db
+      POSTGRES_USER: dts
+      POSTGRES_PASSWORD_FILE: /run/secrets/db-password
+      POSTGRES_DB: dts
+    secrets:
+      - db-password
+    networks:
+      - internal
+    volumes:
+      - pg-db:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - "node.role == manager"
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1536M
 
-  reverse-proxy:
-    image: ${CI_APPLICATION_REPOSITORY}-reverse-proxy:${VERSION}
-    environment:
-      VIRTUAL_HOST: ${VIRTUAL_HOST}
-      VIRTUAL_PORT: ${VIRTUAL_PORT}
-      LETSENCRYPT_HOST: ${VIRTUAL_HOST_SSL}
+secrets:
+  db-password:
+    external:
+      name: dts-db-password-prod
+  jwt-secret:
+    external:
+      name: dts-jwt-secret-prod
+  
 
-  db:
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+networks:
+  internal:
+    driver: overlay
+  cloud-edge:
+    external: true
+
+volumes:
+  pg-db:
+    driver_opts: 
+      type: none
+      device: /mnt/prod/db
+      o: bind

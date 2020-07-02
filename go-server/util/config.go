@@ -1,12 +1,15 @@
 package util
 
 type ServerConfig struct {
-	Version     string
-	Environment string
-	Port        string
-	GraphQL     GqlConfig
-	JWT         JWTConfig
-	Database    DatabaseConfig
+	Version           string
+	Environment       string
+	APIPath           string
+	PlaygroundPath    string
+	PlaygroundAPIPath string
+	Port              string
+	GraphQL           GqlConfig
+	JWT               JWTConfig
+	Database          DatabaseConfig
 }
 
 type JWTConfig struct {

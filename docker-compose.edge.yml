@@ -4,6 +4,7 @@ services:
     image: registry.maxtroughear.dev/max.troughear/digital-timesheet/go-backend-api:edge
     environment:
       APP_VERSION: 0.0.0
+      API_PATH: /api/
       PORT: 3000
       ENVIRONMENT: production
       JWT_SECRET_KEY_FILE: /run/secrets/jwt-secret
@@ -26,7 +27,7 @@ services:
           memory: 1536M
       labels:
         traefik.enable: 'true'
-        traefik.backend: dts-api
+        traefik.backend: dts-edge-api
         traefik.docker.network: cloud-edge
         traefik.port: '3000'
         traefik.frontend.rule: Host:edge.dts.maxtroughear.xyz;Path:api
@@ -45,7 +46,7 @@ services:
       replicas: 1
       labels:
         traefik.enable: 'true'
-        traefik.backend: dts-frontend
+        traefik.backend: dts-edge-frontend
         traefik.docker.network: cloud-edge
         traefik.port: '80'
         traefik.frontend.rule: Host:edge.dts.maxtroughear.xyz

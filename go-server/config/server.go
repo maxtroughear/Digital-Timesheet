@@ -10,9 +10,12 @@ func Server() *util.ServerConfig {
 	godotenv.Load()
 
 	return &util.ServerConfig{
-		Version:     util.MustGet("APP_VERSION"),
-		Environment: util.MustGet("ENVIRONMENT"),
-		Port:        util.MustGet("PORT"),
+		Version:           util.MustGet("APP_VERSION"),
+		Environment:       util.MustGet("ENVIRONMENT"),
+		APIPath:           util.CanGet("API_PATH", "/"),
+		PlaygroundPath:    util.CanGet("PLAYGROUND_PATH", "/graphql"),
+		PlaygroundAPIPath: util.CanGet("PLAYGROUND_API_PATH", "/api/"),
+		Port:              util.MustGet("PORT"),
 		JWT: util.JWTConfig{
 			Secret: util.MustGetSecretFromEnv("JWT_SECRET_KEY"),
 		},
