@@ -9,7 +9,7 @@ import (
 )
 
 func registerRoutes(router *chi.Mux, cfg *util.ServerConfig, db *gorm.DB) {
-	router.Handle("/", handler.GraphqlHandler(db, cfg))
+	router.Handle("/api/", handler.GraphqlHandler(db, cfg))
 
 	if cfg.Environment == "development" {
 		router.Handle("/graphql", playground.Handler("GraphQL playground", "/api/"))
