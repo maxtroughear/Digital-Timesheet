@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/apollotracing"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
-	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/jinzhu/gorm"
 )
@@ -28,6 +28,12 @@ func GraphqlHandler(db *gorm.DB, cfg *util.ServerConfig) http.Handler {
 		Directives: directive.Register(db, cfg),
 	}
 
+	// init APQ cache
+	cache, err := newCache(cfg.Redis.Address, 24*time.Hour)
+	if err != nil {
+		panic(fmt.Errorf("cannot create APQ cache: %v", err))
+	}
+
 	gqlHandler := handler.New(generated.NewExecutableSchema(c))
 
 	gqlHandler.AddTransport(transport.Websocket{
@@ -39,7 +45,7 @@ func GraphqlHandler(db *gorm.DB, cfg *util.ServerConfig) http.Handler {
 	gqlHandler.AddTransport(transport.MultipartForm{})
 
 	gqlHandler.Use(extension.AutomaticPersistedQuery{
-		Cache: lru.New(200),
+		Cache: cache,
 	})
 
 	// access control extensions, disable as not as flexible as using directives

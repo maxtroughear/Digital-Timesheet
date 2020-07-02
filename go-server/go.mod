@@ -12,8 +12,10 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.7.0
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
+	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/pquerna/otp v1.2.0
 	github.com/speps/go-hashids v2.0.0+incompatible // indirect
 	github.com/vektah/dataloaden v0.3.0
+	github.com/go-redis/redis v6.15.8+incompatible
 	github.com/vektah/gqlparser/v2 v2.0.1
 )

@@ -13,6 +13,7 @@ services:
       POSTGRES_USER: dts
       POSTGRES_PASSWORD_FILE: /run/secrets/db-password
       POSTGRES_MAX_CONNECTIONS: 20
+      REDIS_ADDRESS: redis:6379
     secrets:
       - db-password
       - jwt-secret
@@ -31,6 +32,13 @@ services:
         traefik.docker.network: cloud-edge
         traefik.port: '3000'
         traefik.frontend.rule: Host:edge.dts.maxtroughear.xyz;Path:/api/
+
+  redis:
+    image: redis:latest
+    networks:
+      - internal
+    deploy:
+      replicas: 1
 
 # auth server
 

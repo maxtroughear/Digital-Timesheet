@@ -14,11 +14,15 @@ services:
       POSTGRES_USER: dts
       POSTGRES_PASSWORD: password
       POSTGRES_MAX_CONNECTIONS: 20
+      REDIS_ADDRESS: redis:6379
     deploy: 
       resources:
         limits:
           cpus: '2.0'
           memory: 3072M
+
+  redis:
+    image: redis:latest
 
   frontend:
     build:

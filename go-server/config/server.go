@@ -29,5 +29,8 @@ func Server() *util.ServerConfig {
 			Database:       util.MustGet("POSTGRES_DB"),
 			MaxConnections: util.CanGetInt32("POSTGRES_MAX_CONNECTIONS", 20),
 		},
+		Redis: util.RedisConfig{
+			Address: util.MustGet("REDIS_ADDRESS"),
+		},
 	}
 }

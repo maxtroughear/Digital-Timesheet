@@ -10,6 +10,7 @@ type ServerConfig struct {
 	GraphQL           GqlConfig
 	JWT               JWTConfig
 	Database          DatabaseConfig
+	Redis             RedisConfig
 }
 
 type JWTConfig struct {
@@ -26,4 +27,8 @@ type DatabaseConfig struct {
 	Password       string
 	Database       string
 	MaxConnections int
+}
+
+type RedisConfig struct {
+	Address string
 }
