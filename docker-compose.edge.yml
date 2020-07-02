@@ -29,13 +29,14 @@ services:
         traefik.backend: dts-api
         traefik.docker.network: cloud-edge
         traefik.port: '3000'
-        traefik.frontend.rule: Host:edge.dts.maxtroughear.xyz;Path:/api/
+        traefik.frontend.rule: Host:edge.dts.maxtroughear.xyz;Path:api
 
 # auth server
 
 # file proxy server
 
   frontend:
+    image: registry.maxtroughear.dev/max.troughear/digital-timesheet/go-backend-frontend:edge
     environment:
       REACT_APP_API_URI: /api/
     networks:
@@ -118,5 +119,5 @@ volumes:
   pg-db:
     driver_opts: 
       type: none
-      device: /mnt/dts/db
+      device: /mnt/edge/db
       o: bind
