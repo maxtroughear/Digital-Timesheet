@@ -1,1 +1,0 @@
-{"query":"query { company { id name code users { id } } }" }
