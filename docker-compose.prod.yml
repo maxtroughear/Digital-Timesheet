@@ -48,7 +48,7 @@ services:
         traefik.enable: 'true'
         traefik.backend: dts-frontend
         traefik.docker.network: cloud-edge
-        traefik.port: '80'
+        traefik.port: '3000'
         traefik.frontend.rule: Host:dts.maxtroughear.xyz
     
   postgres:

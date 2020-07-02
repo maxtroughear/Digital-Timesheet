@@ -30,7 +30,7 @@ services:
         traefik.backend: dts-edge-api
         traefik.docker.network: cloud-edge
         traefik.port: '3000'
-        traefik.frontend.rule: Host:edge.dts.maxtroughear.xyz;Path:api
+        traefik.frontend.rule: Host:edge.dts.maxtroughear.xyz;Path:/api/
 
 # auth server
 
@@ -48,7 +48,7 @@ services:
         traefik.enable: 'true'
         traefik.backend: dts-edge-frontend
         traefik.docker.network: cloud-edge
-        traefik.port: '80'
+        traefik.port: '3000'
         traefik.frontend.rule: Host:edge.dts.maxtroughear.xyz
     
   postgres:
