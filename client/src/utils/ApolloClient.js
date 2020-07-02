@@ -1,8 +1,9 @@
 import {
   ApolloClient, ApolloLink, HttpLink, InMemoryCache, from,
 } from '@apollo/client';
-import gql from 'graphql-tag';
+import { createPersistedQueryLink } from '@apollo/link-persisted-queries';
 
+import { IS_LOGGED_IN } from 'graphql/Queries';
 import { resolvers, typeDefs } from './ApolloResolvers';
 import localStorageKey from './LocalStorageKey';
 
@@ -22,12 +23,16 @@ const authMiddleware = new ApolloLink((operation, forward) => {
 });
 
 const httpLink = new HttpLink({
-  uri: '/api/',
+  uri: process.env.REACT_APP_API_URI,
 });
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
   link: from([
+    createPersistedQueryLink({
+      // generateHash: ({ documentId }) => documentId,
+      useGETForHashedQueries: false,
+    }),
     authMiddleware,
     httpLink,
   ]),
@@ -37,11 +42,7 @@ const client = new ApolloClient({
 
 const writeInitialData = () => {
   client.writeQuery({
-    query: gql`
-      {
-        isLoggedIn @client
-      }
-    `,
+    query: IS_LOGGED_IN,
     data: {
       isLoggedIn: !!localStorage.getItem(localStorageKey),
     },

@@ -1,0 +1,18 @@
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+directive @isAuthenticated on FIELD | FIELD_DEFINITION
+
+# This checks whether or not a time sensitive token was submitted with the request
+directive @isSecureAuthenticated on FIELD | FIELD_DEFINITION
+
+# Valid format for hasPerms: 'User:View'
+# example: @hasPerms(perms: ['Company:Edit'])
+directive @hasPerms(perms: [String!]!) on FIELD | FIELD_DEFINITION
+
+directive @hasPerm(perm: String!) on FIELD | FIELD_DEFINITION
+
+type Query {
+  version: String!
+
+  test: String! @hasPerm(perm: "Test:Read")
+}

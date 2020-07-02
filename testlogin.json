@@ -1,0 +1,1 @@
+{"query":"mutation { login(code:\"SA\" username:\"serviceadmin\" password:\"servicepass\") { token } }" }

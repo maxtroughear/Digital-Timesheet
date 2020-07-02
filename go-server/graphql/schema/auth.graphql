@@ -1,0 +1,17 @@
+type AuthData {
+  user: User
+	token: String
+  twoFactorEnabled: Boolean!
+}
+
+extend type Query {
+  twoFactorBackups: [String!]! @isSecureAuthenticated
+}
+
+extend type Mutation {
+  login(code: String!, username: String!, password: String!, twoFactor: String): AuthData!
+  loginSecure(password: String!): String! @isAuthenticated
+  newTwoFactorBackups: [String!]! @isSecureAuthenticated
+  enableTwoFactor(secret: String!, token: String!): [String!]! @isSecureAuthenticated
+  disableTwoFactor(password: String!): Boolean! @isAuthenticated
+}

@@ -1,0 +1,14 @@
+type User {
+  id: ID!
+	company: Company!
+	username: String!
+}
+
+extend type Query {
+  me: User! @hasPerm(perm: "Me:Read")
+  user(id: ID!): User! @hasPerm(perm: "User:Read")
+}
+
+extend type Mutation {
+  createUser(code: String!, username: String!, password: String!): User @hasPerm(perm: "User:Create")
+}

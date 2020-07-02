@@ -1,0 +1,127 @@
+{
+  "folders": [
+    {
+      "name": "DTS",
+      "path": "."
+    },
+    {
+      "name": "Client",
+      "path": "client"
+    },
+    {
+      "name": "Node Server",
+      "path": "node-server"
+    },
+    {
+      "name": "Go Server",
+      "path": "go-server"
+    },
+    {
+      "name": "Reverse-Proxy",
+      "path": "reverse-proxy"
+    },
+    {
+      "name": "Docs",
+      "path": "docs"
+    },
+    {
+      "name": "Licenses",
+      "path": "licenses"
+    }
+  ],
+  "settings": {
+    "eslint.format.enable": true,
+    "eslint.workingDirectories": [
+      "client",
+      "node-server"
+    ],
+    "editor.codeActionsOnSaveTimeout": 3000,
+    "go.useLanguageServer": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "[javascript]": {
+      "editor.insertSpaces": true,
+      "editor.tabSize": 2,
+      "editor.codeActionsOnSave": {
+        "source.fixAll": true
+      },
+    },
+    "[javascriptreact]": {
+      "editor.insertSpaces": true,
+	    "editor.tabSize": 2,
+      "editor.codeActionsOnSave": {
+        "source.fixAll": true
+      },
+    },
+    "[go]": {
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
+      },
+      "editor.tabSize": 4,
+      "editor.insertSpaces": false,
+      // Optional: Disable snippets, as they conflict with completion ranking.
+      "editor.snippetSuggestions": "none",
+      "files.eol": "\n"
+    },
+    "[go.mod]": {
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
+      },
+      "editor.tabSize": 4,
+      "editor.insertSpaces": false,
+    },
+    "gopls": {
+      // Add parameter placeholders when completing a function.
+      "usePlaceholders": true,
+      
+      // If true, enable additional analyses with staticcheck.
+      // Warning: This will significantly increase memory usage.
+      "staticcheck": true,
+    },
+    // Hide root directory folders
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      // "client": true,
+      // "docs": true,
+      // "go-server": true,
+      // "licenses": true,
+      // "reverse-proxy": true,
+      // "node-server": true
+    },
+    "go.languageServerExperimentalFeatures": {
+      "format": true,
+      "diagnostics": true,
+      "documentLink": false
+    },
+    "go.buildOnSave": "off",
+    "cSpell.words": [
+      "PGDATA",
+      "chartjs",
+      "clsx",
+      "dataloaden",
+      "dpage",
+      "dwin",
+      "enriquebris",
+      "goconcurrentqueue",
+      "godotenv",
+      "idhash",
+      "optimus",
+      "pgadmin",
+      "pgtune",
+      "postgres",
+      "postgresql",
+      "pquerna",
+      "roboto",
+      "structs",
+      "totp",
+      "traefik",
+      "vektah"
+    ],
+  },
+}

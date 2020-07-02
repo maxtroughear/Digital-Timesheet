@@ -1,0 +1,132 @@
+version: '3.3'
+services:
+  api:
+    image: registry.maxtroughear.dev/max.troughear/digital-timesheet/go-backend-api:edge
+    environment:
+      APP_VERSION: 0.0.0
+      API_PATH: /api/
+      PORT: 3000
+      ENVIRONMENT: production
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt-secret
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: dts
+      POSTGRES_USER: dts
+      POSTGRES_PASSWORD_FILE: /run/secrets/db-password
+      POSTGRES_MAX_CONNECTIONS: 20
+      REDIS_ADDRESS: redis:6379
+    secrets:
+      - db-password
+      - jwt-secret
+    networks:
+      - internal
+      - cloud-edge
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1536M
+      labels:
+        traefik.enable: 'true'
+        traefik.backend: dts-edge-api
+        traefik.docker.network: cloud-edge
+        traefik.port: '3000'
+        traefik.frontend.rule: Host:edge.dts.maxtroughear.xyz;Path:/api/
+
+  redis:
+    image: redis:latest
+    networks:
+      - internal
+    deploy:
+      replicas: 1
+
+# auth server
+
+# file proxy server
+
+  frontend:
+    image: registry.maxtroughear.dev/max.troughear/digital-timesheet/go-backend-frontend:edge
+    environment:
+      REACT_APP_API_URI: /api/
+    networks:
+      - cloud-edge
+    deploy:
+      replicas: 1
+      labels:
+        traefik.enable: 'true'
+        traefik.backend: dts-edge-frontend
+        traefik.docker.network: cloud-edge
+        traefik.port: '3000'
+        traefik.frontend.rule: Host:edge.dts.maxtroughear.xyz
+    
+  postgres:
+    image: postgres:latest
+    # command config set up from pgtune - 
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=768MB"
+      - "-c"
+      - "effective_cache_size=2304MB"
+      - "-c"
+      - "maintenance_work_mem=192MB"
+      - "-c"
+      - "checkpoint_completion_target=0.7"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "work_mem=3932kB"
+      - "-c"
+      - "min_wal_size=1GB"
+      - "-c"
+      - "max_wal_size=4GB"
+    environment: 
+      PGDATA: /var/lib/postgresql/data/db
+      POSTGRES_USER: dts
+      POSTGRES_PASSWORD_FILE: /run/secrets/db-password
+      POSTGRES_DB: dts
+    secrets:
+      - db-password
+    networks:
+      - internal
+    volumes:
+      - pg-db:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - "node.role == manager"
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1536M
+
+secrets:
+  db-password:
+    external:
+      name: dts-db-password-edge
+  jwt-secret:
+    external:
+      name: dts-jwt-secret-edge
+  
+
+networks:
+  internal:
+    driver: overlay
+  cloud-edge:
+    external: true
+
+volumes:
+  pg-db:
+    driver_opts: 
+      type: none
+      device: /mnt/edge/db
+      o: bind
