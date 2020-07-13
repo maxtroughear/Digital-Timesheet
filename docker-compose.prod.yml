@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   api:
-    image: registry.maxtroughear.dev/max.troughear/digital-timesheet/go-backend-api:stable
+    image: registry.maxtroughear.dev/max.troughear/digital-timesheet/master-api:stable
     environment:
       APP_VERSION: 0.0.0
       API_PATH: /api/
@@ -45,7 +45,7 @@ services:
 # file proxy server
 
   frontend:
-    image: registry.maxtroughear.dev/max.troughear/digital-timesheet/go-backend-frontend:stable
+    image: registry.maxtroughear.dev/max.troughear/digital-timesheet/master-frontend:stable
     environment:
       REACT_APP_API_URI: /api/
     networks:
