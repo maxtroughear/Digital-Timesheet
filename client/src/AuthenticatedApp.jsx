@@ -11,6 +11,8 @@ import { Grow } from '@material-ui/core';
 
 import * as colours from 'styles/colours';
 
+import PrimaryAppBar from 'components/PrimaryAppBar';
+
 import DashboardPage from 'pages/DashboardPage';
 import NotFoundPage from 'pages/NotFound';
 
@@ -49,6 +51,7 @@ const AuthenticatedApp = () => (
       {/* <MainNavigation /> */}
       <Grow in>
         <main className="main-content">
+          <PrimaryAppBar />
           <ErrorBoundary FallbackComponent={ErrorFallback}>
             <Switch>
               <Redirect from="/" to="/dashboard" exact />

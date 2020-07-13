@@ -19,6 +19,7 @@
     "graphql-tag": "^2.10.3",
     "material-table": "1.63.1",
     "material-ui-popup-state": "1.6.1",
+    "prop-types": "^15.7.2",
     "react": "^16.13.1",
     "react-chartjs-2": "^2.9.0",
     "react-color": "^2.18.1",
