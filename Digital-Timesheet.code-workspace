@@ -41,6 +41,7 @@
       "editor.codeActionsOnSave": {
         "source.fixAll": true
       },
+      "files.eol": "\r\n",
     },
     "[javascriptreact]": {
       "editor.insertSpaces": true,
@@ -48,6 +49,7 @@
       "editor.codeActionsOnSave": {
         "source.fixAll": true
       },
+      "files.eol": "\r\n",
     },
     "[go]": {
       "editor.formatOnSave": true,
@@ -96,7 +98,9 @@
     },
     "go.buildOnSave": "off",
     "cSpell.words": [
+      "Frag",
       "PGDATA",
+      "Vert",
       "chartjs",
       "clsx",
       "dataloaden",
@@ -105,6 +109,7 @@
       "enriquebris",
       "goconcurrentqueue",
       "godotenv",
+      "haspopup",
       "idhash",
       "optimus",
       "pgadmin",
