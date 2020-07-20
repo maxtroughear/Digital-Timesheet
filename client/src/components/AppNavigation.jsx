@@ -24,6 +24,7 @@ import {
   makeStyles,
   useTheme,
 } from '@material-ui/core';
+import { Skeleton } from '@material-ui/lab';
 
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
@@ -159,19 +160,6 @@ function AppNavigation(props) {
     pollInterval: 60000,
   });
 
-  if (error) {
-    // launch a error toast
-    console.error('Failed to load me query', error);
-  }
-
-  if (data) {
-    console.log(data);
-  }
-
-  if (loading) {
-    console.log('loading');
-  }
-
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -303,7 +291,9 @@ function AppNavigation(props) {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap className={classes.title}>
-            { data ? data.me.company.name : '' }
+            { data
+              ? data.me.company.name
+              : <Skeleton height={40}><Typography variant="h6">Company Name</Typography></Skeleton> }
           </Typography>
           <div className={classes.search} classes={{ focused: classes.searchFocused }}>
             <div className={classes.searchIcon}>
