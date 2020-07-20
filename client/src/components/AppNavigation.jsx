@@ -63,6 +63,15 @@ const useStyles = makeStyles((theme) => ({
   },
   // necessary for content to be below app bar
   toolbar: theme.mixins.toolbar,
+
+  // toolbar only for the drawer
+  [theme.breakpoints.up('sm')]: {
+    drawerToolbar: theme.mixins.toolbar,
+    drawerTitle: {
+      display: 'none',
+    },
+  },
+
   drawerPaper: {
     width: drawerWidth,
   },
@@ -186,9 +195,21 @@ function AppNavigation(props) {
     setMobileOpen(!mobileOpen);
   };
 
+  // Drawer
+
   const drawer = (
     <div>
-      <div className={classes.toolbar} />
+      <div className={classes.drawerToolbar} />
+      <div className={classes.drawerTitle}>
+        <List>
+          <ListItem>
+
+            { data
+              ? <ListItemText primary={data.me.company.name} primaryTypographyProps={{ variant: 'h6' }} />
+              : <Skeleton height={40}><Typography variant="h6">Company Name</Typography></Skeleton> }
+          </ListItem>
+        </List>
+      </div>
       <Divider />
       <List>
         {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
