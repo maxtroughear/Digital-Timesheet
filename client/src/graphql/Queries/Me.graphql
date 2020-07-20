@@ -1,5 +1,5 @@
 query ME {
-  user {
+  me {
     id
     username
     company {

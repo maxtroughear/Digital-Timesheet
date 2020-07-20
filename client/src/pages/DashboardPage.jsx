@@ -7,14 +7,10 @@ import { useApolloClient } from '@apollo/client';
 const DashboardPage = () => {
   const client = useApolloClient();
 
-  const handleLogout = () => {
-    localStorage.clear();
-    client.resetStore();
-  };
   return (
     <div
       css={{
-        height: '100%',
+        height: 'auto',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

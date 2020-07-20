@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import { amber, green, red } from '@material-ui/core/colors';
 import {
-  Button, Paper, TextField, Typography, CircularProgress, Collapse, Grow,
+  Button, Paper, TextField, Typography, CircularProgress, Collapse, Fade,
 } from '@material-ui/core';
 import { useMutation } from '@apollo/client';
 
@@ -150,7 +150,7 @@ const UnauthenticatedApp = () => {
         height: '100vh',
       }}
     >
-      <Grow in={!success} onExited={handleLoginExited}>
+      <Fade in={!success} onExited={handleLoginExited}>
         <Paper className={classes.root} elevation={5}>
           <Typography variant="h4" gutterBottom>
             Timesheet Login
@@ -202,7 +202,7 @@ const UnauthenticatedApp = () => {
             </div>
           </form>
         </Paper>
-      </Grow>
+      </Fade>
       <SnackbarAlert open={incorrectOpen} onClose={handleIncorrectClose} severity="error" message={errorMessage} />
       <SnackbarAlert open={twoFactorEnabledOpen} onClose={handleTwoFactorEnabledClose} severity="warning" message="Two Factor Authentication is Enabled" />
     </div>

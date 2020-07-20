@@ -1,17 +1,16 @@
 /** @jsx jsx */
 /** @jsxFrag React.Fragment */
 import { jsx } from '@emotion/core';
-import React from 'react';
 import {
   BrowserRouter, Route, Redirect, Switch,
 } from 'react-router-dom';
 import Proptypes from 'prop-types';
 import ErrorBoundary from 'react-error-boundary';
-import { Grow } from '@material-ui/core';
+import { Fade } from '@material-ui/core';
 
 import * as colours from 'styles/colours';
 
-import PrimaryAppBar from 'components/PrimaryAppBar';
+import AppNavigation from 'components/AppNavigation';
 
 import DashboardPage from 'pages/DashboardPage';
 import NotFoundPage from 'pages/NotFound';
@@ -47,11 +46,9 @@ ErrorFallback.defaultProps = {
 
 const AuthenticatedApp = () => (
   <BrowserRouter>
-    <React.Fragment>
-      {/* <MainNavigation /> */}
-      <Grow in>
-        <main className="main-content">
-          <PrimaryAppBar />
+    <Fade in>
+      <div>
+        <AppNavigation>
           <ErrorBoundary FallbackComponent={ErrorFallback}>
             <Switch>
               <Redirect from="/" to="/dashboard" exact />
@@ -59,9 +56,9 @@ const AuthenticatedApp = () => (
               <Route path="*" component={NotFoundPage} />
             </Switch>
           </ErrorBoundary>
-        </main>
-      </Grow>
-    </React.Fragment>
+        </AppNavigation>
+      </div>
+    </Fade>
   </BrowserRouter>
 );
 
