@@ -30,7 +30,10 @@ services:
       dockerfile: Dockerfile
     environment: 
       REACT_APP_API_URI: /api/
+      CHOKIDAR_USEPOLLING: 'true'
     stdin_open: true
+    volumes:
+      - ./client/src/:/usr/src/app/src/
 
   reverse-proxy:
     build:

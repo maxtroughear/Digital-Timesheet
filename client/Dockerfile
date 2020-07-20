@@ -14,6 +14,4 @@ RUN npm install --silent
 
 COPY . /usr/src/app
 
-HEALTHCHECK NONE
-
 CMD [ "npm", "start" ]
