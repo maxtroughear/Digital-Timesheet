@@ -4,5 +4,7 @@
 # Go file's should stay as LF
 *.go text eol=lf
 
+*.sh text eol=lf
+
 *.jsx text eol=crlf
 *.js text eol=crlf
