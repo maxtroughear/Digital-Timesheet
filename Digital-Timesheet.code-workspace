@@ -98,6 +98,7 @@
     },
     "go.buildOnSave": "off",
     "cSpell.words": [
+      "Deduplication",
       "Frag",
       "Inbox",
       "PGDATA",
