@@ -165,6 +165,7 @@ function AppNavigation(props) {
 
   // queries
 
+  // TODO: Handle error and loading
   const { loading, error, data } = useQuery(ME, {
     pollInterval: 60000,
   });
@@ -206,7 +207,7 @@ function AppNavigation(props) {
 
             { data
               ? <ListItemText primary={data.me.company.name} primaryTypographyProps={{ variant: 'h6' }} />
-              : <Skeleton height={40}><Typography variant="h6">Company Name</Typography></Skeleton> }
+              : <Skeleton animation="wave" height={40}><Typography variant="h6">Company Name</Typography></Skeleton> }
           </ListItem>
         </List>
       </div>
@@ -314,7 +315,7 @@ function AppNavigation(props) {
           <Typography variant="h6" noWrap className={classes.title}>
             { data
               ? data.me.company.name
-              : <Skeleton height={40}><Typography variant="h6">Company Name</Typography></Skeleton> }
+              : <Skeleton animation="wave" height={40}><Typography variant="h6">Company Name</Typography></Skeleton> }
           </Typography>
           <div className={classes.search} classes={{ focused: classes.searchFocused }}>
             <div className={classes.searchIcon}>
