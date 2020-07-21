@@ -40,7 +40,7 @@ func login(user *model.User, cfg *util.JWTConfig, expires time.Duration) (string
 	// put into queue and wait for queue to finish
 	// this is to prevent OOM errors
 
-	return buildAndSignToken(user, cfg, 1*time.Hour)
+	return buildAndSignToken(user, cfg, expires)
 }
 
 // VerifyPassword verifies a password against the stored hash
