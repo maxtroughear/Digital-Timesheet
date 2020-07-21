@@ -170,6 +170,7 @@ function AppNavigation(props) {
   const { data } = useQuery(ME, {
     pollInterval: 60000,
     errorPolicy: 'ignore',
+    fetchPolicy: 'cache-first',
     skip: !doQueries,
   });
 

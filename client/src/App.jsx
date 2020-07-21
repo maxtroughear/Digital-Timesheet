@@ -17,7 +17,6 @@ const IsLoggedIn = () => {
   const { loading, error, refetch } = useQuery(ME, {
     errorPolicy: 'all',
     fetchPolicy: 'network-only',
-    partialRefetch: true,
   });
 
   if (loading) return <FullPageSpinner />;
