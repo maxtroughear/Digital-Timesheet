@@ -154,6 +154,7 @@ function AppNavigation(props) {
   const classes = useStyles();
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [doQueries, setDoQueries] = useState(true);
 
   const client = useApolloClient();
 
@@ -166,8 +167,10 @@ function AppNavigation(props) {
   // queries
 
   // TODO: Handle error and loading
-  const { loading, error, data } = useQuery(ME, {
+  const { data } = useQuery(ME, {
     pollInterval: 60000,
+    errorPolicy: 'ignore',
+    skip: !doQueries,
   });
 
   const handleProfileMenuOpen = (event) => {
@@ -188,6 +191,7 @@ function AppNavigation(props) {
   };
 
   const handleLogout = () => {
+    setDoQueries(false);
     localStorage.clear();
     client.resetStore();
   };

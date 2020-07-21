@@ -2,7 +2,7 @@ import React from 'react';
 import { FullPageSpinner } from 'components/lib';
 import { useQuery } from '@apollo/client';
 
-import { IS_LOGGED_IN } from 'graphql/Queries';
+import { ME } from 'graphql/Queries';
 
 const AuthenticatedApp = React.lazy(() => import('./AuthenticatedApp'));
 const UnauthenticatedApp = React.lazy(() => import('./UnauthenticatedApp'));
@@ -14,11 +14,15 @@ const IsLoggedIn = () => {
   // if (data && data.user !== null) return <AuthenticatedApp />;
   // return <UnauthenticatedApp />;
 
-  const { data, loading } = useQuery(IS_LOGGED_IN);
+  const { loading, error, refetch } = useQuery(ME, {
+    errorPolicy: 'all',
+    fetchPolicy: 'network-only',
+    partialRefetch: true,
+  });
 
   if (loading) return <FullPageSpinner />;
-  if (data && data.isLoggedIn === true) return <AuthenticatedApp />;
-  return <UnauthenticatedApp />;
+  if (!error) return <AuthenticatedApp />;
+  return <UnauthenticatedApp onLogin={refetch} />;
 };
 
 const App = () => (

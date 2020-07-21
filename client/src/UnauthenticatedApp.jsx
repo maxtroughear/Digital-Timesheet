@@ -3,6 +3,7 @@
 import { jsx } from '@emotion/core';
 import { useState, useCallback } from 'react';
 import clsx from 'clsx';
+import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import { amber, green, red } from '@material-ui/core/colors';
 import {
@@ -65,9 +66,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const UnauthenticatedApp = () => {
+const UnauthenticatedApp = (props) => {
   // const client = useApolloClient();
   const classes = useStyles();
+
+  const { onLogin } = props;
 
   const [incorrectOpen, setIncorrectOpen] = useState(false);
   const [twoFactorEnabledOpen, setTwoFactorEnabledOpen] = useState(false);
@@ -91,8 +94,9 @@ const UnauthenticatedApp = () => {
       } else {
         setSuccess(true);
         localStorage.setItem(localStorageKey, login.token);
+        onLogin();
       }
-    }, []),
+    }, [onLogin]),
     onError: useCallback((e) => {
       setErrorMessage(e.message.replace('GraphQL error: ', ''));
       setIncorrectOpen(true);
@@ -207,6 +211,10 @@ const UnauthenticatedApp = () => {
       <SnackbarAlert open={twoFactorEnabledOpen} onClose={handleTwoFactorEnabledClose} severity="warning" message="Two Factor Authentication is Enabled" />
     </div>
   );
+};
+
+UnauthenticatedApp.propTypes = {
+  onLogin: PropTypes.func.isRequired,
 };
 
 export default UnauthenticatedApp;

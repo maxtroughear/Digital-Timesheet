@@ -1,6 +1,7 @@
 import {
-  ApolloClient, ApolloLink, HttpLink, InMemoryCache, from,
+  ApolloClient, ApolloLink, InMemoryCache, from, createHttpLink,
 } from '@apollo/client';
+import { onError } from '@apollo/client/link/error';
 import { createPersistedQueryLink } from '@apollo/link-persisted-queries';
 
 import { IS_LOGGED_IN } from 'graphql/Queries';
@@ -22,8 +23,19 @@ const authMiddleware = new ApolloLink((operation, forward) => {
   return forward(operation);
 });
 
-const httpLink = new HttpLink({
+const httpLink = createHttpLink({
   uri: process.env.REACT_APP_API_URI,
+  credentials: 'same-origin',
+});
+
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+  if (graphQLErrors) {
+    graphQLErrors.map(({ message, locations, path }) => console.error(
+      `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
+    ));
+  }
+
+  if (networkError) console.error(`[Network error]: ${networkError}`);
 });
 
 const client = new ApolloClient({
@@ -33,11 +45,13 @@ const client = new ApolloClient({
       // generateHash: ({ documentId }) => documentId,
       useGETForHashedQueries: false,
     }),
+    errorLink,
     authMiddleware,
     httpLink,
   ]),
   resolvers,
   typeDefs,
+  queryDeduplication: true,
 });
 
 const writeInitialData = () => {
