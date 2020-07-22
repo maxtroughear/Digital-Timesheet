@@ -54,34 +54,43 @@ test_echo:
   script:
     - echo "$CI_DEFAULT_BRANCH"
 
-build-frontend:
+.build:
   stage: build
   image:
     name: docker:stable
   services:
     - docker:stable-dind
   script:
-    - cd ./client
+    - cd "./${BUILD_DIR}"
     - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     - >
-      docker image pull "${CI_APPLICATION_REPOSITORY}-frontend:${CI_COMMIT_BEFORE_SHA}" ||
-      docker image pull "${CI_APPLICATION_REPOSITORY}-frontend:latest" ||
-      docker image pull "${CI_APPLICATION_REPOSITORY}-frontend:edge" ||
+      docker image pull "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:${CI_COMMIT_BEFORE_SHA}" ||
+      true
+    - >
+      docker image pull "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:latest" ||
+      true
+    - >
+      docker image pull "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge" ||
       true
     - >
       docker build
       -f Dockerfile.prod
-      --cache-from "${CI_APPLICATION_REPOSITORY}-frontend:${CI_COMMIT_BEFORE_SHA}"
-      --cache-from "${CI_APPLICATION_REPOSITORY}-frontend:latest"
-      --cache-from "${CI_APPLICATION_REPOSITORY}-frontend:edge"
-      -t "${CI_APPLICATION_REPOSITORY}-frontend:latest"
-      -t "${CI_APPLICATION_REPOSITORY}-frontend:${CI_APPLICATION_TAG}"
-      -t "${CI_APPLICATION_REPOSITORY}-frontend:edge"
-      --build-arg REACT_APP_API_URI
+      --cache-from "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:${CI_COMMIT_BEFORE_SHA}"
+      --cache-from "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:latest"
+      --cache-from "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge"
+      -t "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:latest"
+      -t "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:${CI_APPLICATION_TAG}"
+      -t "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge"
       .
-    - test ! -z "${CI_COMMIT_TAG}" && docker push "${CI_APPLICATION_REPOSITORY}-frontend:latest"
-    - docker push "${CI_APPLICATION_REPOSITORY}-frontend:${CI_APPLICATION_TAG}"
-    - docker push "${CI_APPLICATION_REPOSITORY}-frontend:edge"
+    - test ! -z "${CI_COMMIT_TAG}" && docker push "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:latest"
+    - docker push "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:${CI_APPLICATION_TAG}"
+    - docker push "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge"
+
+build-frontend:
+  extends: .build
+  variables:
+    BUILD_DIR: "client"
+    BUILD_NAME: "frontend"
 
 # build-reverse-proxy:
 #   stage: build
@@ -109,31 +118,10 @@ build-frontend:
 #     - docker push "${CI_APPLICATION_REPOSITORY}-reverse-proxy:edge"
 
 build-api:
-  stage: build
-  image:
-    name: docker:stable
-  services:
-    - docker:stable-dind
-  script:
-    - cd ./go-server
-    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
-    - >
-      docker image pull "${CI_APPLICATION_REPOSITORY}-api:${CI_COMMIT_BEFORE_SHA}" ||
-      docker image pull "${CI_APPLICATION_REPOSITORY}-api:latest" ||
-      docker image pull "${CI_APPLICATION_REPOSITORY}-api:edge" ||
-      true
-    - >
-      docker build
-      --cache-from "${CI_APPLICATION_REPOSITORY}-api:${CI_COMMIT_BEFORE_SHA}"
-      --cache-from "${CI_APPLICATION_REPOSITORY}-api:latest"
-      --cache-from "${CI_APPLICATION_REPOSITORY}-api:edge"
-      -t "${CI_APPLICATION_REPOSITORY}-api:latest"
-      -t "${CI_APPLICATION_REPOSITORY}-api:${CI_APPLICATION_TAG}"
-      -t "${CI_APPLICATION_REPOSITORY}-api:edge"
-      .
-    - test ! -z "${CI_COMMIT_TAG}" && docker push "${CI_APPLICATION_REPOSITORY}-api:latest"
-    - docker push "${CI_APPLICATION_REPOSITORY}-api:${CI_APPLICATION_TAG}"
-    - docker push "${CI_APPLICATION_REPOSITORY}-api:edge"
+  extends: .build
+  variables:
+    BUILD_DIR: "go-server"
+    BUILD_NAME: "api"
 
 review:
   stage: review
