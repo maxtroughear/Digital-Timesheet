@@ -1,11 +1,13 @@
-image: docker:latest
-
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs"
-
+  
 # setup dynamic variables
 default:
+  image: docker:latest
+  cache:
+    paths:
+      - client/node_modules/
   before_script:
     - |
       if [[ -z "$CI_COMMIT_TAG" ]]; then
@@ -18,8 +20,8 @@ default:
     - export ENVIRONMENT_HOST=$(echo "$CI_ENVIRONMENT_URL" | sed -e 's|^[^/]*//||')
     - export APPLICATION_DIRECTORY=${CI_PROJECT_PATH_SLUG}-${CI_ENVIRONMENT_SLUG}
     # export variables to .env
-    - chmod +x ./setup-env.sh
-    - ./setup-env.sh
+    #- chmod +x ./setup-env.sh
+    #- ./setup-env.sh
 
 stages:
   - test
@@ -28,9 +30,6 @@ stages:
   - staging
   - deploy
 
-cache:
-  paths:
-    - client/node_modules/
 
 # testing not setup
 
@@ -80,6 +79,7 @@ test_echo:
       -t "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:latest"
       -t "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:${CI_APPLICATION_TAG}"
       -t "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge"
+      --build-arg REACT_APP_API_URI
       .
     - test ! -z "${CI_COMMIT_TAG}" && docker push "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:latest"
     - docker push "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:${CI_APPLICATION_TAG}"
