@@ -1,4 +1,4 @@
-FROM node:lts
+FROM node:lts as build
 
 ARG REACT_APP_API_URI
 ENV REACT_APP_API_URI $REACT_APP_API_URI
@@ -14,4 +14,14 @@ RUN npm install --silent
 
 COPY . /usr/src/app
 
-CMD [ "npm", "start" ]
+RUN npm run build
+
+FROM nginx:alpine
+
+COPY --from=build /usr/src/app/build /usr/share/nginx/html
+
+RUN rm /etc/nginx/conf.d/default.conf
+
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+CMD ["nginx", "-g", "daemon off;"]

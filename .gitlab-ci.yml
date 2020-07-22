@@ -74,7 +74,6 @@ test_echo:
       true
     - >
       docker build
-      -f Dockerfile.prod
       --cache-from "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:${CI_COMMIT_BEFORE_SHA}"
       --cache-from "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:latest"
       --cache-from "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge"
@@ -91,31 +90,6 @@ build-frontend:
   variables:
     BUILD_DIR: "client"
     BUILD_NAME: "frontend"
-
-# build-reverse-proxy:
-#   stage: build
-#   image:
-#     name: docker:stable
-#   services:
-#     - docker:stable-dind
-#   script:
-#     - cd ./reverse-proxy
-#     - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
-#     - >
-#       docker image pull "${CI_APPLICATION_REPOSITORY}-reverse-proxy:${CI_COMMIT_BEFORE_SHA}" ||
-#       docker image pull "${CI_APPLICATION_REPOSITORY}-reverse-proxy:latest" ||
-#       true
-#     - >
-#       docker build
-#       --cache-from "${CI_APPLICATION_REPOSITORY}-reverse-proxy:${CI_COMMIT_BEFORE_SHA}"
-#       --cache-from "${CI_APPLICATION_REPOSITORY}-reverse-proxy:latest"
-#       -t "${CI_APPLICATION_REPOSITORY}-reverse-proxy:latest"
-#       -t "${CI_APPLICATION_REPOSITORY}-reverse-proxy:${CI_APPLICATION_TAG}"
-#       -t "${CI_APPLICATION_REPOSITORY}-reverse-proxy:edge"
-#       .
-#     - test ! -z "${CI_COMMIT_TAG}" && docker push "${CI_APPLICATION_REPOSITORY}-reverse-proxy:latest"
-#     - docker push "${CI_APPLICATION_REPOSITORY}-reverse-proxy:${CI_APPLICATION_TAG}"
-#     - docker push "${CI_APPLICATION_REPOSITORY}-reverse-proxy:edge"
 
 build-api:
   extends: .build
