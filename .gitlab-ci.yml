@@ -80,6 +80,7 @@ test_echo:
       -t "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:${CI_APPLICATION_TAG}"
       -t "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge"
       --build-arg REACT_APP_API_URI
+      --build-arg REACT_APP_BASE_DOMAIN
       .
     - test ! -z "${CI_COMMIT_TAG}" && docker push "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:latest"
     - docker push "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:${CI_APPLICATION_TAG}"
@@ -138,7 +139,7 @@ staging:
   extends: .deploy
   environment:
     name: staging
-    url: https://edge.$BASE_DOMAIN
+    url: https://$REACT_APP_BASE_DOMAIN
   only:
     refs:
       - master
@@ -150,7 +151,7 @@ production:
   extends: .deploy
   environment:
     name: production
-    url: https://$BASE_DOMAIN
+    url: https://$REACT_APP_BASE_DOMAIN
   allow_failure: false
   when: manual
   only:

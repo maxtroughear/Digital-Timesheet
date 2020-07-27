@@ -30,6 +30,7 @@ services:
       dockerfile: Dockerfile.debug
     environment: 
       REACT_APP_API_URI: /api/
+      REACT_APP_BASE_DOMAIN: docker.local
       CHOKIDAR_USEPOLLING: 'true'
     stdin_open: true
     volumes:

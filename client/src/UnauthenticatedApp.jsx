@@ -66,6 +66,18 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const getSubdomain = () => {
+  const baseDomain = process.env.REACT_APP_BASE_DOMAIN;
+  const baseDomainParts = baseDomain.split('.');
+  const { host } = window.location;
+  const hostParts = host.split('.');
+  if (hostParts.length > baseDomainParts.length) {
+    // has subdomain
+    return hostParts[0];
+  }
+  return '';
+};
+
 const UnauthenticatedApp = (props) => {
   // const client = useApolloClient();
   const classes = useStyles();
@@ -75,7 +87,7 @@ const UnauthenticatedApp = (props) => {
   const [incorrectOpen, setIncorrectOpen] = useState(false);
   const [twoFactorEnabledOpen, setTwoFactorEnabledOpen] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [company, setCompany] = useState('');
+  const [company, setCompany] = useState(getSubdomain());
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [twoFactor, setTwoFactor] = useState('');
@@ -165,8 +177,9 @@ const UnauthenticatedApp = (props) => {
               label="Company"
               helperText="Your company's code"
               variant="filled"
-              disabled={loading || success}
-              onChange={(e) => setCompany(e.target.value)}
+              disabled={loading || success || getSubdomain() !== ''}
+              value={company.toUpperCase()}
+              onChange={(e) => setCompany(e.target.value.toLowerCase())}
             />
             <TextField
               required

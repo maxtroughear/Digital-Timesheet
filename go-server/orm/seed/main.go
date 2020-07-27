@@ -11,7 +11,7 @@ func RequiredUsers(db *gorm.DB) {
 	var company model.Company
 
 	db.Where(model.Company{
-		Code: "SA",
+		Code: "sa",
 	}).Attrs(model.Company{
 		Name: "Service Admins",
 	}).FirstOrCreate(&company)
