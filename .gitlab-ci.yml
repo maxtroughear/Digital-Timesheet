@@ -162,6 +162,11 @@ production:
     - docker tag "${CI_APPLICATION_REPOSITORY}-api:edge" "${CI_APPLICATION_REPOSITORY}-api:stable"
     - docker push "${CI_APPLICATION_REPOSITORY}-frontend:stable"
     - docker push "${CI_APPLICATION_REPOSITORY}-api:stable"
+    - echo "Updating API Service"
+    - curl -X POST ${SERVICE_WEBHOOK_API}
+    - echo "Updating Frontend Service"
+    - curl -X POST ${SERVICE_WEBHOOK_FRONTEND}
+    - exit 0
   only:
     refs:
       - master
@@ -170,7 +175,7 @@ production:
 
 .deploy:
   image: registry.maxtroughear.dev/max.troughear/docker-images/alpine-curl
-  after_script:
+  script:
     - echo "Updating API Service"
     - curl -X POST ${SERVICE_WEBHOOK_API}
     - echo "Updating Frontend Service"
