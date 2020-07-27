@@ -28,6 +28,7 @@ stages:
   - build
   - review
   - staging
+  - release
   - deploy
 
 
@@ -146,6 +147,28 @@ staging:
     variables:
       - $STAGING_ENABLED == "true"
 
+.release:
+  stage: release
+  image:
+    name: docker:stable
+  services:
+    - docker:stable-dind
+  script:
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
+    - docker image pull "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge"
+    - docker tag "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge" "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:stable"
+    - docker push "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:stable"
+
+release-frontend:
+  extends: .release
+  variables:
+    BUILD_NAME: "frontend"
+
+release-api:
+  extends: .release
+  variables:
+    BUILD_NAME: "api"
+
 production:
   stage: deploy
   extends: .deploy
@@ -154,19 +177,6 @@ production:
     url: https://$REACT_APP_BASE_DOMAIN
   allow_failure: false
   when: manual
-  script:
-    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
-    - docker image pull "${CI_APPLICATION_REPOSITORY}-frontend:edge"
-    - docker image pull "${CI_APPLICATION_REPOSITORY}-api:edge"
-    - docker tag "${CI_APPLICATION_REPOSITORY}-frontend:edge" "${CI_APPLICATION_REPOSITORY}-frontend:stable"
-    - docker tag "${CI_APPLICATION_REPOSITORY}-api:edge" "${CI_APPLICATION_REPOSITORY}-api:stable"
-    - docker push "${CI_APPLICATION_REPOSITORY}-frontend:stable"
-    - docker push "${CI_APPLICATION_REPOSITORY}-api:stable"
-    - echo "Updating API Service"
-    - curl -X POST ${SERVICE_WEBHOOK_API}
-    - echo "Updating Frontend Service"
-    - curl -X POST ${SERVICE_WEBHOOK_FRONTEND}
-    - exit 0
   only:
     refs:
       - master
