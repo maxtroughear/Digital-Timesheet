@@ -97,6 +97,7 @@
     },
     "go.buildOnSave": "off",
     "cSpell.words": [
+      "CHOKIDAR",
       "Deduplication",
       "Frag",
       "Inbox",
@@ -113,6 +114,7 @@
       "gqlgen",
       "haspopup",
       "idhash",
+      "ledns",
       "maxtroughear",
       "optimus",
       "pgadmin",
