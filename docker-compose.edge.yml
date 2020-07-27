@@ -28,10 +28,17 @@ services:
           memory: 1536M
       labels:
         traefik.enable: 'true'
-        traefik.backend: dts-edge-api
         traefik.docker.network: cloud-edge
-        traefik.port: '3000'
-        traefik.frontend.rule: Host:edge.dts.maxtroughear.xyz;Path:/api/
+        traefik.http.routers.dts-edge-api-http.rule: HostRegexp(`beta.kiwisheets.com`, `{subdomain:[a-z]+}.beta.kiwisheets.com`) && PathPrefix(`/api/`)
+        traefik.http.routers.dts-edge-api-http.entrypoints: http
+        traefik.http.routers.dts-edge-api-http.middlewares: https-redirect
+        traefik.http.routers.dts-edge-api-https.rule: HostRegexp(`beta.kiwisheets.com`, `{subdomain:[a-z]+}.beta.kiwisheets.com`) && PathPrefix(`/api/`)
+        traefik.http.routers.dts-edge-api-https.entrypoints: https
+        traefik.http.routers.dts-edge-api-https.tls: 'true'
+        traefik.http.routers.dts-edge-api-https.tls.certresolver: ledns
+        traefik.http.routers.dts-edge-api-https.tls.domains[0].main: '*.beta.kiwisheets.com'
+        traefik.http.routers.dts-edge-api-https.tls.domains[0].sans: beta.kiwisheets.com
+        traefik.http.services.dts-edge-api.loadbalancer.server.port: '3000'
 
   redis:
     image: redis:latest
@@ -46,18 +53,23 @@ services:
 
   frontend:
     image: registry.maxtroughear.dev/max.troughear/digital-timesheet/master-frontend:edge
-    environment:
-      REACT_APP_API_URI: /api/
     networks:
       - cloud-edge
     deploy:
       replicas: 1
       labels:
         traefik.enable: 'true'
-        traefik.backend: dts-edge-frontend
         traefik.docker.network: cloud-edge
-        traefik.port: '3000'
-        traefik.frontend.rule: Host:edge.dts.maxtroughear.xyz
+        traefik.http.routers.dts-edge-frontend-http.rule: HostRegexp(`beta.kiwisheets.com`, `{subdomain:[a-z]+}.beta.kiwisheets.com`)
+        traefik.http.routers.dts-edge-frontend-http.entrypoints: http
+        traefik.http.routers.dts-edge-frontend-http.middlewares: https-redirect
+        traefik.http.routers.dts-edge-frontend-https.rule: HostRegexp(`beta.kiwisheets.com`, `{subdomain:[a-z]+}.beta.kiwisheets.com`)
+        traefik.http.routers.dts-edge-frontend-https.entrypoints: https
+        traefik.http.routers.dts-edge-frontend-https.tls: 'true'
+        traefik.http.routers.dts-edge-frontend-https.tls.certresolver: ledns
+        traefik.http.routers.dts-edge-frontend-https.tls.domains[0].main: '*.beta.kiwisheets.com'
+        traefik.http.routers.dts-edge-frontend-https.tls.domains[0].sans: beta.kiwisheets.com
+        traefik.http.services.dts-edge-frontend.loadbalancer.server.port: '3000'
     
   postgres:
     image: postgres:latest
