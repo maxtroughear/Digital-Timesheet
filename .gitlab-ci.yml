@@ -153,6 +153,8 @@ staging:
     name: docker:stable
   services:
     - docker:stable-dind
+  when: manual
+  allow_failure: false
   script:
     - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     - docker image pull "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge"
@@ -176,7 +178,6 @@ production:
     name: production
     url: https://$REACT_APP_BASE_DOMAIN
   allow_failure: false
-  when: manual
   only:
     refs:
       - master
