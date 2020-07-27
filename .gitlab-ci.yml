@@ -92,6 +92,7 @@ build-frontend:
   variables:
     BUILD_DIR: "client"
     BUILD_NAME: "frontend"
+    REACT_APP_BASE_DOMAIN: "beta.${BASE_DOMAIN}"
 
 build-api:
   extends: .build
@@ -140,7 +141,7 @@ staging:
   extends: .deploy
   environment:
     name: staging
-    url: https://$REACT_APP_BASE_DOMAIN
+    url: https://beta.${BASE_DOMAIN}
   only:
     refs:
       - master
@@ -165,6 +166,18 @@ release-frontend:
   extends: .release
   variables:
     BUILD_NAME: "frontend"
+    REACT_APP_BASE_DOMAIN: "app.${BASE_DOMAIN}"
+  script:
+    - cd ./client
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
+    - docker image pull "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge"
+    - >
+      docker build
+      --from-cache "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge"
+      -t "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:stable"
+      --build-arg REACT_APP_API_URI
+      --build-arg REACT_APP_BASE_DOMAIN
+    - docker push "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:stable"
 
 release-api:
   extends: .release
@@ -176,7 +189,7 @@ production:
   extends: .deploy
   environment:
     name: production
-    url: https://$REACT_APP_BASE_DOMAIN
+    url: https://app.${BASE_DOMAIN}
   allow_failure: false
   only:
     refs:
