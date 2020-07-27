@@ -173,7 +173,7 @@ release-frontend:
     - docker image pull "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge"
     - >
       docker build
-      --from-cache "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge"
+      --cache-from "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:edge"
       -t "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:stable"
       --build-arg REACT_APP_API_URI
       --build-arg REACT_APP_BASE_DOMAIN
