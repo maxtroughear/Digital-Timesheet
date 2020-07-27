@@ -177,6 +177,7 @@ release-frontend:
       -t "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:stable"
       --build-arg REACT_APP_API_URI
       --build-arg REACT_APP_BASE_DOMAIN
+      .
     - docker push "${CI_APPLICATION_REPOSITORY}-${BUILD_NAME}:stable"
 
 release-api:
