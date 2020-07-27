@@ -154,6 +154,14 @@ production:
     url: https://$REACT_APP_BASE_DOMAIN
   allow_failure: false
   when: manual
+  script:
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
+    - docker image pull "${CI_APPLICATION_REPOSITORY}-frontend:edge"
+    - docker image pull "${CI_APPLICATION_REPOSITORY}-api:edge"
+    - docker tag "${CI_APPLICATION_REPOSITORY}-frontend:edge" "${CI_APPLICATION_REPOSITORY}-frontend:stable"
+    - docker tag "${CI_APPLICATION_REPOSITORY}-api:edge" "${CI_APPLICATION_REPOSITORY}-api:stable"
+    - docker push "${CI_APPLICATION_REPOSITORY}-frontend:stable"
+    - docker push "${CI_APPLICATION_REPOSITORY}-api:stable"
   only:
     refs:
       - master
@@ -162,7 +170,7 @@ production:
 
 .deploy:
   image: registry.maxtroughear.dev/max.troughear/docker-images/alpine-curl
-  script:
+  after_script:
     - echo "Updating API Service"
     - curl -X POST ${SERVICE_WEBHOOK_API}
     - echo "Updating Frontend Service"

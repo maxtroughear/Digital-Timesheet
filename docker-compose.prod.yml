@@ -140,5 +140,5 @@ volumes:
   pg-db:
     driver_opts: 
       type: none
-      device: /mnt/prod/db
+      device: /mnt/edge/db-prod
       o: bind
