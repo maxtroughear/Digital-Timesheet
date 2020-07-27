@@ -29,16 +29,16 @@ services:
       labels:
         traefik.enable: 'true'
         traefik.docker.network: cloud-edge
-        traefik.http.routers.dts-edge-api-http.rule: HostRegexp(`app.kiwisheets.com`, `{subdomain:[a-z]+}.app.kiwisheets.com`) && PathPrefix(`/api/`)
-        traefik.http.routers.dts-edge-api-http.entrypoints: http
-        traefik.http.routers.dts-edge-api-http.middlewares: https-redirect
-        traefik.http.routers.dts-edge-api-https.rule: HostRegexp(`app.kiwisheets.com`, `{subdomain:[a-z]+}.app.kiwisheets.com`) && PathPrefix(`/api/`)
-        traefik.http.routers.dts-edge-api-https.entrypoints: https
-        traefik.http.routers.dts-edge-api-https.tls: 'true'
-        traefik.http.routers.dts-edge-api-https.tls.certresolver: ledns
-        traefik.http.routers.dts-edge-api-https.tls.domains[0].main: '*.app.kiwisheets.com'
-        traefik.http.routers.dts-edge-api-https.tls.domains[0].sans: app.kiwisheets.com
-        traefik.http.services.dts-edge-api.loadbalancer.server.port: '3000'
+        traefik.http.routers.dts-prod-api-http.rule: HostRegexp(`app.kiwisheets.com`, `{subdomain:[a-z]+}.app.kiwisheets.com`) && PathPrefix(`/api/`)
+        traefik.http.routers.dts-prod-api-http.entrypoints: http
+        traefik.http.routers.dts-prod-api-http.middlewares: https-redirect
+        traefik.http.routers.dts-prod-api-https.rule: HostRegexp(`app.kiwisheets.com`, `{subdomain:[a-z]+}.app.kiwisheets.com`) && PathPrefix(`/api/`)
+        traefik.http.routers.dts-prod-api-https.entrypoints: https
+        traefik.http.routers.dts-prod-api-https.tls: 'true'
+        traefik.http.routers.dts-prod-api-https.tls.certresolver: ledns
+        traefik.http.routers.dts-prod-api-https.tls.domains[0].main: '*.app.kiwisheets.com'
+        traefik.http.routers.dts-prod-api-https.tls.domains[0].sans: app.kiwisheets.com
+        traefik.http.services.dts-prod-api.loadbalancer.server.port: '3000'
 
   redis:
     image: redis:latest
@@ -60,16 +60,16 @@ services:
       labels:
         traefik.enable: 'true'
         traefik.docker.network: cloud-edge
-        traefik.http.routers.dts-edge-frontend-http.rule: HostRegexp(`app.kiwisheets.com`, `{subdomain:[a-z]+}.app.kiwisheets.com`)
-        traefik.http.routers.dts-edge-frontend-http.entrypoints: http
-        traefik.http.routers.dts-edge-frontend-http.middlewares: https-redirect
-        traefik.http.routers.dts-edge-frontend-https.rule: HostRegexp(`app.kiwisheets.com`, `{subdomain:[a-z]+}.app.kiwisheets.com`)
-        traefik.http.routers.dts-edge-frontend-https.entrypoints: https
-        traefik.http.routers.dts-edge-frontend-https.tls: 'true'
-        traefik.http.routers.dts-edge-frontend-https.tls.certresolver: ledns
-        traefik.http.routers.dts-edge-frontend-https.tls.domains[0].main: '*.app.kiwisheets.com'
-        traefik.http.routers.dts-edge-frontend-https.tls.domains[0].sans: app.kiwisheets.com
-        traefik.http.services.dts-edge-frontend.loadbalancer.server.port: '3000'
+        traefik.http.routers.dts-prod-frontend-http.rule: HostRegexp(`app.kiwisheets.com`, `{subdomain:[a-z]+}.app.kiwisheets.com`)
+        traefik.http.routers.dts-prod-frontend-http.entrypoints: http
+        traefik.http.routers.dts-prod-frontend-http.middlewares: https-redirect
+        traefik.http.routers.dts-prod-frontend-https.rule: HostRegexp(`app.kiwisheets.com`, `{subdomain:[a-z]+}.app.kiwisheets.com`)
+        traefik.http.routers.dts-prod-frontend-https.entrypoints: https
+        traefik.http.routers.dts-prod-frontend-https.tls: 'true'
+        traefik.http.routers.dts-prod-frontend-https.tls.certresolver: ledns
+        traefik.http.routers.dts-prod-frontend-https.tls.domains[0].main: '*.app.kiwisheets.com'
+        traefik.http.routers.dts-prod-frontend-https.tls.domains[0].sans: app.kiwisheets.com
+        traefik.http.services.dts-prod-frontend.loadbalancer.server.port: '3000'
     
   postgres:
     image: postgres:latest
