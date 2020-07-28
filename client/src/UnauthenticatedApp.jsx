@@ -1,26 +1,27 @@
 /** @jsx jsx */
 /** @jsxFrag React.Fragment */
 import { jsx } from '@emotion/core';
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import { amber, green, red } from '@material-ui/core/colors';
 import {
-  Button, Paper, TextField, Typography, CircularProgress, Collapse, Fade,
+  Button, Paper, TextField, Typography, CircularProgress, Collapse, Fade, Link,
 } from '@material-ui/core';
-import { useMutation } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 
 import SnackbarAlert from 'components/SnackbarAlert';
 
-import { LOGIN, IS_LOGGED_IN } from 'graphql/Queries';
+import { LOGIN, IS_LOGGED_IN, COMPANY_NAME } from 'graphql/Queries';
 import localStorageKey from 'utils/LocalStorageKey';
 
 const useStyles = makeStyles((theme) => ({
   root: {
     '& > *': {
-      margin: theme.spacing(2),
+      margin: theme.spacing(1),
     },
+    padding: theme.spacing(3),
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -78,6 +79,10 @@ const getSubdomain = () => {
   return '';
 };
 
+const subdomain = getSubdomain();
+
+const hasCompany = getSubdomain() !== '';
+
 const UnauthenticatedApp = (props) => {
   // const client = useApolloClient();
   const classes = useStyles();
@@ -87,15 +92,27 @@ const UnauthenticatedApp = (props) => {
   const [incorrectOpen, setIncorrectOpen] = useState(false);
   const [twoFactorEnabledOpen, setTwoFactorEnabledOpen] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [company, setCompany] = useState(getSubdomain());
+  const [company, setCompany] = useState(subdomain);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [twoFactor, setTwoFactor] = useState('');
   const [success, setSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  const {
+    data: companyNameData,
+    loading: companyNameLoading,
+    error: companyNameError,
+  } = useQuery(COMPANY_NAME, {
+    skip: !hasCompany,
+    variables: {
+      code: company,
+    },
+    errorPolicy: 'none',
+  });
+
   const [loginMutation, {
-    data, loading, client,
+    data: loginData, loading: loginLoading, client,
   }] = useMutation(LOGIN, {
     fetchPolicy: 'no-cache',
     errorPolicy: 'none',
@@ -137,13 +154,22 @@ const UnauthenticatedApp = (props) => {
   };
 
   const buttonClassname = clsx({
-    [classes.buttonSuccess]: data && data.userLogin && data.userLogin.token,
+    [classes.buttonSuccess]: loginData && loginData.userLogin && loginData.userLogin.token,
     [classes.buttonWarning]: twoFactorEnabledOpen,
   });
 
+  const changeCompany = (event) => {
+    event.preventDefault();
+    window.location.host = process.env.REACT_APP_BASE_DOMAIN;
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (!loading && !success) {
+    if (!hasCompany) {
+      window.location.host = `${company}.${process.env.REACT_APP_BASE_DOMAIN}`;
+    }
+
+    if (!loginLoading && !success) {
       loginMutation({
         variables: {
           company,
@@ -153,6 +179,105 @@ const UnauthenticatedApp = (props) => {
         },
       });
     }
+  };
+
+  const preventDefault = (event) => {
+    event.preventDefault();
+  };
+
+  const companyEnteredFormContents = (
+    <React.Fragment>
+      <TextField
+        required
+        autoFocus="true"
+        label="Username"
+        variant="filled"
+        disabled={loginLoading || success}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <TextField
+        required
+        label="Password"
+        type="password"
+        variant="filled"
+        disabled={loginLoading || success}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <Collapse in={twoFactorEnabled}>
+        <TextField
+          label="2FA code"
+          variant="filled"
+          required={twoFactorEnabled}
+          disabled={!twoFactorEnabled || loginLoading || success}
+          onChange={(e) => setTwoFactor(e.target.value)}
+        />
+      </Collapse>
+      <div className={classes.buttonWrapper}>
+        <Button
+          variant="contained"
+          color="primary"
+          type="submit"
+          disabled={loginLoading || success}
+          className={buttonClassname}
+        >
+          Login
+        </Button>
+        {loginLoading && <CircularProgress size={24} className={classes.buttonProgress} />}
+      </div>
+    </React.Fragment>
+  );
+
+  const companyCodeFormContents = (
+    <React.Fragment>
+      <TextField
+        required
+        autoFocus="true"
+        label="Company"
+        helperText="Your company's code"
+        variant="filled"
+        disabled={loginLoading || success || getSubdomain() !== ''}
+        value={company.toUpperCase()}
+        onChange={(e) => setCompany(e.target.value.toLowerCase())}
+      />
+      <div className={classes.buttonWrapper}>
+        <Button
+          variant="contained"
+          color="primary"
+          type="submit"
+          disabled={loginLoading || success}
+          className={buttonClassname}
+        >
+          Login
+        </Button>
+        {loginLoading && <CircularProgress size={24} className={classes.buttonProgress} />}
+      </div>
+    </React.Fragment>
+  );
+
+  const companyNotFound = (
+    <React.Fragment>
+      <Typography>
+        Company not found for code
+        {' '}
+        {company.toUpperCase()}
+      </Typography>
+      <Button onClick={changeCompany}>Go back</Button>
+    </React.Fragment>
+  );
+
+  const formContents = () => {
+    if (hasCompany) {
+      if (companyNameLoading) {
+        return (
+          <CircularProgress size={24} />
+        );
+      }
+      if (!companyNameError) {
+        return companyEnteredFormContents;
+      }
+      return companyNotFound;
+    }
+    return companyCodeFormContents;
   };
 
   return (
@@ -168,55 +293,37 @@ const UnauthenticatedApp = (props) => {
     >
       <Fade in={!success} onExited={handleLoginExited}>
         <Paper className={classes.root} elevation={5}>
-          <Typography variant="h4" gutterBottom>
-            Timesheet Login
+          {!hasCompany
+          && (
+          <Typography variant="h3" gutterBottom="true">
+            KiwiSheets
           </Typography>
-          <form className={classes.form} onSubmit={handleSubmit}>
-            <TextField
-              required
-              label="Company"
-              helperText="Your company's code"
-              variant="filled"
-              disabled={loading || success || getSubdomain() !== ''}
-              value={company.toUpperCase()}
-              onChange={(e) => setCompany(e.target.value.toLowerCase())}
-            />
-            <TextField
-              required
-              label="Username"
-              variant="filled"
-              disabled={loading || success}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <TextField
-              required
-              label="Password"
-              type="password"
-              variant="filled"
-              disabled={loading || success}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <Collapse in={twoFactorEnabled}>
-              <TextField
-                label="2FA code"
-                variant="filled"
-                required={twoFactorEnabled}
-                disabled={!twoFactorEnabled || loading || success}
-                onChange={(e) => setTwoFactor(e.target.value)}
-              />
-            </Collapse>
-            <div className={classes.buttonWrapper}>
-              <Button
-                variant="contained"
-                color="primary"
-                type="submit"
-                disabled={loading || success}
-                className={buttonClassname}
-              >
+          )}
+          {hasCompany && !companyNameError && (
+            <React.Fragment>
+              <Typography variant="h5" align="center">
+                {companyNameLoading || companyNameError ? '' : companyNameData.companyName}
+                {' '}
                 Login
-              </Button>
-              {loading && <CircularProgress size={24} className={classes.buttonProgress} />}
-            </div>
+              </Typography>
+              <Typography variant="subtitle1" align="center">
+                You can come back here using
+                <br />
+                <Link href="/" onClick={preventDefault}>
+                  {company.toUpperCase()}
+                  .
+                  {process.env.REACT_APP_BASE_DOMAIN.toUpperCase()}
+                </Link>
+              </Typography>
+              <Typography>
+                Not right?
+                {' '}
+                <Button onClick={changeCompany}>Go back</Button>
+              </Typography>
+            </React.Fragment>
+          )}
+          <form className={classes.form} onSubmit={handleSubmit}>
+            {formContents()}
           </form>
         </Paper>
       </Fade>

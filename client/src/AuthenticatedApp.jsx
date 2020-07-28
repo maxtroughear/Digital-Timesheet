@@ -1,6 +1,7 @@
 /** @jsx jsx */
 /** @jsxFrag React.Fragment */
 import { jsx } from '@emotion/core';
+import React from 'react';
 import {
   BrowserRouter, Route, Redirect, Switch,
 } from 'react-router-dom';
@@ -47,7 +48,7 @@ ErrorFallback.defaultProps = {
 const AuthenticatedApp = () => (
   <BrowserRouter>
     <Fade in>
-      <div>
+      <React.Fragment>
         <AppNavigation>
           <ErrorBoundary FallbackComponent={ErrorFallback}>
             <Switch>
@@ -57,7 +58,7 @@ const AuthenticatedApp = () => (
             </Switch>
           </ErrorBoundary>
         </AppNavigation>
-      </div>
+      </React.Fragment>
     </Fade>
   </BrowserRouter>
 );
