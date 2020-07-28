@@ -99,8 +99,6 @@ const UnauthenticatedApp = (props) => {
   const [success, setSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  console.log(hasCompany);
-
   const {
     data: companyNameData,
     loading: companyNameLoading,
@@ -172,9 +170,7 @@ const UnauthenticatedApp = (props) => {
     event.preventDefault();
     if (!hasCompany) {
       window.location.host = `${company}.${process.env.REACT_APP_BASE_DOMAIN}`;
-    }
-
-    if (!loginLoading && !success) {
+    } else if (!loginLoading && !success) {
       loginMutation({
         variables: {
           company,
