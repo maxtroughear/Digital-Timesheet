@@ -99,6 +99,8 @@ const UnauthenticatedApp = (props) => {
   const [success, setSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  console.log(hasCompany);
+
   const {
     data: companyNameData,
     loading: companyNameLoading,
@@ -109,6 +111,9 @@ const UnauthenticatedApp = (props) => {
       code: company,
     },
     errorPolicy: 'none',
+    // really nasty workaround
+    // see https://github.com/apollographql/apollo-client/issues/6190
+    fetchPolicy: !hasCompany ? 'cache-only' : 'cache-first',
   });
 
   const [loginMutation, {
@@ -189,7 +194,7 @@ const UnauthenticatedApp = (props) => {
     <React.Fragment>
       <TextField
         required
-        autoFocus="true"
+        autoFocus
         label="Username"
         variant="filled"
         disabled={loginLoading || success}
@@ -231,7 +236,7 @@ const UnauthenticatedApp = (props) => {
     <React.Fragment>
       <TextField
         required
-        autoFocus="true"
+        autoFocus
         label="Company"
         helperText="Your company's code"
         variant="filled"
@@ -295,7 +300,7 @@ const UnauthenticatedApp = (props) => {
         <Paper className={classes.root} elevation={5}>
           {!hasCompany
           && (
-          <Typography variant="h3" gutterBottom="true">
+          <Typography variant="h3" gutterBottom>
             KiwiSheets
           </Typography>
           )}
