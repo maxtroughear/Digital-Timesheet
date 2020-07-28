@@ -38,6 +38,16 @@ func (r *queryResolver) Company(ctx context.Context, id *hide.ID) (*model.Compan
 	return dataloader.For(ctx).CompanyByID.Load(int64(*id))
 }
 
+func (r *queryResolver) CompanyName(ctx context.Context, code string) (string, error) {
+	company, err := dataloader.For(ctx).CompanyByCode.Load(code)
+
+	if company.Name == "" {
+		return "", fmt.Errorf("No company exists")
+	}
+
+	return company.Name, err
+}
+
 // Company returns generated.CompanyResolver implementation.
 func (r *Resolver) Company() generated.CompanyResolver { return &companyResolver{r} }
 
