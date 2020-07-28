@@ -248,7 +248,7 @@ const UnauthenticatedApp = (props) => {
           disabled={loginLoading || success}
           className={buttonClassname}
         >
-          Login
+          Go
         </Button>
         {loginLoading && <CircularProgress size={24} className={classes.buttonProgress} />}
       </div>
@@ -300,7 +300,7 @@ const UnauthenticatedApp = (props) => {
             KiwiSheets
           </Typography>
           )}
-          {hasCompany && !companyNameError && (
+          {hasCompany && !companyNameError && !companyNameLoading && (
             <React.Fragment>
               <Typography variant="h5" align="center">
                 {companyNameLoading || companyNameError ? '' : companyNameData.companyName}
