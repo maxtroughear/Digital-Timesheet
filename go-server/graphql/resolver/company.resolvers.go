@@ -41,7 +41,7 @@ func (r *queryResolver) Company(ctx context.Context, id *hide.ID) (*model.Compan
 func (r *queryResolver) CompanyName(ctx context.Context, code string) (string, error) {
 	company, err := dataloader.For(ctx).CompanyByCode.Load(code)
 
-	if company.Name == "" {
+	if company == nil {
 		return "", fmt.Errorf("No company exists")
 	}
 

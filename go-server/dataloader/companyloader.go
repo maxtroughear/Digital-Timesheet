@@ -121,6 +121,11 @@ func newCompanyByCodeLoader(db *gorm.DB) *generated.CompanyStringLoader {
 		MaxBatch: 1000,
 		Wait:     1 * time.Millisecond,
 		Fetch: func(companyCodes []string) ([]*model.Company, []error) {
+			// var comps []*model.Company
+			// err := db.Model(&model.Company{}).Where("code IN (?)", companyCodes).Find(&comps).Error
+
+			// return comps, []error{err}
+
 			rows, err := db.Model(&model.Company{}).Where("code IN (?)", companyCodes).Rows()
 
 			if err != nil {
