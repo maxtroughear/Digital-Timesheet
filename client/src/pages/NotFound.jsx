@@ -3,28 +3,30 @@
 import { jsx } from '@emotion/core';
 import Proptypes from 'prop-types';
 import { Link as RouterLink } from 'react-router-dom';
-import { Link } from '@material-ui/core';
+import { Link, Fade } from '@material-ui/core';
 
-const NotFoundPage = ({ location }) => (
-  <div
-    css={{
-      height: '100%',
-      display: 'grid',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
-    <div>
-      Sorry... nothing here at
-      {' '}
-      <code>{location.pathname}</code>
-      {' '}
-      <Link component={RouterLink} to="/">
-        Go home
-        <span role="img" aria-label="">🏡</span>
-      </Link>
+const NotFoundPage = () => (
+  <Fade in>
+    <div
+      css={{
+        height: '100%',
+        display: 'grid',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div>
+        Sorry nothing to see here
+        {' '}
+        <span role="img" aria-label="">⛔</span>
+        {' '}
+        <Link component={RouterLink} to="/">
+          Go home
+          <span role="img" aria-label="">🏡</span>
+        </Link>
+      </div>
     </div>
-  </div>
+  </Fade>
 );
 
 NotFoundPage.propTypes = {

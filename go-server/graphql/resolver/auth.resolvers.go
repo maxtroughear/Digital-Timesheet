@@ -85,6 +85,19 @@ func (r *queryResolver) TwoFactorBackups(ctx context.Context) ([]string, error) 
 	return auth.GetBackupKeys(r.DB, auth.For(ctx))
 }
 
+func (r *queryResolver) TwoFactorEnabled(ctx context.Context) (bool, error) {
+	// check is 2FA is enabled
+	user := auth.For(ctx).User
+	var twoFA model.TwoFactor
+
+	if err := r.DB.Model(&user).Related(&twoFA).Error; err == nil {
+		// if no error, two factor is enabled
+		return true, nil
+	}
+
+	return false, nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 

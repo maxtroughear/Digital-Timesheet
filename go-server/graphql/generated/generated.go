@@ -81,14 +81,17 @@ type ComplexityRoot struct {
 		Me               func(childComplexity int) int
 		Test             func(childComplexity int) int
 		TwoFactorBackups func(childComplexity int) int
+		TwoFactorEnabled func(childComplexity int) int
 		User             func(childComplexity int, id hide.ID) int
 		Version          func(childComplexity int) int
 	}
 
 	User struct {
-		Company  func(childComplexity int) int
-		ID       func(childComplexity int) int
-		Username func(childComplexity int) int
+		Company   func(childComplexity int) int
+		Firstname func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Lastname  func(childComplexity int) int
+		Username  func(childComplexity int) int
 	}
 }
 
@@ -108,6 +111,7 @@ type QueryResolver interface {
 	Version(ctx context.Context) (string, error)
 	Test(ctx context.Context) (string, error)
 	TwoFactorBackups(ctx context.Context) ([]string, error)
+	TwoFactorEnabled(ctx context.Context) (bool, error)
 	Company(ctx context.Context, id *hide.ID) (*model.Company, error)
 	CompanyName(ctx context.Context, code string) (string, error)
 	Me(ctx context.Context) (*model.User, error)
@@ -305,6 +309,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.TwoFactorBackups(childComplexity), true
 
+	case "Query.twoFactorEnabled":
+		if e.complexity.Query.TwoFactorEnabled == nil {
+			break
+		}
+
+		return e.complexity.Query.TwoFactorEnabled(childComplexity), true
+
 	case "Query.user":
 		if e.complexity.Query.User == nil {
 			break
@@ -331,12 +342,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Company(childComplexity), true
 
+	case "User.firstname":
+		if e.complexity.User.Firstname == nil {
+			break
+		}
+
+		return e.complexity.User.Firstname(childComplexity), true
+
 	case "User.id":
 		if e.complexity.User.ID == nil {
 			break
 		}
 
 		return e.complexity.User.ID(childComplexity), true
+
+	case "User.lastname":
+		if e.complexity.User.Lastname == nil {
+			break
+		}
+
+		return e.complexity.User.Lastname(childComplexity), true
 
 	case "User.username":
 		if e.complexity.User.Username == nil {
@@ -416,14 +441,15 @@ var sources = []*ast.Source{
 }
 
 extend type Query {
-  twoFactorBackups: [String!]! @isSecureAuthenticated
+  twoFactorBackups: [String!]! @isAuthenticated
+  twoFactorEnabled: Boolean! @isAuthenticated
 }
 
 extend type Mutation {
   login(code: String!, username: String!, password: String!, twoFactor: String): AuthData!
   loginSecure(password: String!): String! @isAuthenticated
-  newTwoFactorBackups: [String!]! @isSecureAuthenticated
-  enableTwoFactor(secret: String!, token: String!): [String!]! @isSecureAuthenticated
+  newTwoFactorBackups: [String!]! @isAuthenticated
+  enableTwoFactor(secret: String!, token: String!): [String!]! @isAuthenticated
   disableTwoFactor(password: String!): Boolean! @isAuthenticated
 }`, BuiltIn: false},
 	&ast.Source{Name: "graphql/schema/company.graphql", Input: `type Company {
@@ -464,6 +490,8 @@ type Query {
   id: ID!
 	company: Company!
 	username: String!
+  firstname: String!
+  lastname: String!
 }
 
 extend type Query {
@@ -1127,10 +1155,10 @@ func (ec *executionContext) _Mutation_newTwoFactorBackups(ctx context.Context, f
 			return ec.resolvers.Mutation().NewTwoFactorBackups(rctx)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.IsSecureAuthenticated == nil {
-				return nil, errors.New("directive isSecureAuthenticated is not implemented")
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
 			}
-			return ec.directives.IsSecureAuthenticated(ctx, nil, directive0)
+			return ec.directives.IsAuthenticated(ctx, nil, directive0)
 		}
 
 		tmp, err := directive1(rctx)
@@ -1185,10 +1213,10 @@ func (ec *executionContext) _Mutation_enableTwoFactor(ctx context.Context, field
 			return ec.resolvers.Mutation().EnableTwoFactor(rctx, args["secret"].(string), args["token"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.IsSecureAuthenticated == nil {
-				return nil, errors.New("directive isSecureAuthenticated is not implemented")
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
 			}
-			return ec.directives.IsSecureAuthenticated(ctx, nil, directive0)
+			return ec.directives.IsAuthenticated(ctx, nil, directive0)
 		}
 
 		tmp, err := directive1(rctx)
@@ -1501,10 +1529,10 @@ func (ec *executionContext) _Query_twoFactorBackups(ctx context.Context, field g
 			return ec.resolvers.Query().TwoFactorBackups(rctx)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.IsSecureAuthenticated == nil {
-				return nil, errors.New("directive isSecureAuthenticated is not implemented")
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
 			}
-			return ec.directives.IsSecureAuthenticated(ctx, nil, directive0)
+			return ec.directives.IsAuthenticated(ctx, nil, directive0)
 		}
 
 		tmp, err := directive1(rctx)
@@ -1529,6 +1557,57 @@ func (ec *executionContext) _Query_twoFactorBackups(ctx context.Context, field g
 	res := resTmp.([]string)
 	fc.Result = res
 	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_twoFactorEnabled(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().TwoFactorEnabled(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_company(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1891,6 +1970,68 @@ func (ec *executionContext) _User_username(ctx context.Context, field graphql.Co
 	resTmp := ec._fieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Username, nil
+	})
+
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_firstname(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "User",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp := ec._fieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Firstname, nil
+	})
+
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_lastname(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "User",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp := ec._fieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Lastname, nil
 	})
 
 	if resTmp == nil {
@@ -3068,6 +3209,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "twoFactorEnabled":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_twoFactorEnabled(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "company":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -3171,6 +3326,16 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			})
 		case "username":
 			out.Values[i] = ec._User_username(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "firstname":
+			out.Values[i] = ec._User_firstname(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "lastname":
+			out.Values[i] = ec._User_lastname(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}

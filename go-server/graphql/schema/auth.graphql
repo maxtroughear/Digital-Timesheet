@@ -5,13 +5,14 @@ type AuthData {
 }
 
 extend type Query {
-  twoFactorBackups: [String!]! @isSecureAuthenticated
+  twoFactorBackups: [String!]! @isAuthenticated
+  twoFactorEnabled: Boolean! @isAuthenticated
 }
 
 extend type Mutation {
   login(code: String!, username: String!, password: String!, twoFactor: String): AuthData!
   loginSecure(password: String!): String! @isAuthenticated
-  newTwoFactorBackups: [String!]! @isSecureAuthenticated
-  enableTwoFactor(secret: String!, token: String!): [String!]! @isSecureAuthenticated
+  newTwoFactorBackups: [String!]! @isAuthenticated
+  enableTwoFactor(secret: String!, token: String!): [String!]! @isAuthenticated
   disableTwoFactor(password: String!): Boolean! @isAuthenticated
 }

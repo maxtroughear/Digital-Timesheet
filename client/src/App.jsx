@@ -20,7 +20,7 @@ const IsLoggedIn = () => {
   });
 
   if (loading) return <FullPageSpinner />;
-  if (!error) return <AuthenticatedApp />;
+  if (!error) return <AuthenticatedApp onLogout={refetch} />;
   return <UnauthenticatedApp onLogin={refetch} />;
 };
 

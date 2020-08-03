@@ -3,7 +3,7 @@
 import { jsx } from '@emotion/core';
 import React from 'react';
 import {
-  BrowserRouter, Route, Redirect, Switch,
+  BrowserRouter, Route, Switch,
 } from 'react-router-dom';
 import Proptypes from 'prop-types';
 import ErrorBoundary from 'react-error-boundary';
@@ -15,6 +15,8 @@ import AppNavigation from 'components/AppNavigation';
 
 import DashboardPage from 'pages/DashboardPage';
 import NotFoundPage from 'pages/NotFound';
+import ProfilePage from 'pages/Profile';
+import FinancePage from 'pages/FinancePage';
 
 const ErrorFallback = ({ error }) => (
   <div role="alert" css={{ color: colours.danger, fontSize: '0.7em' }}>
@@ -45,22 +47,30 @@ ErrorFallback.defaultProps = {
   },
 };
 
-const AuthenticatedApp = () => (
-  <BrowserRouter>
-    <Fade in>
-      <React.Fragment>
-        <AppNavigation>
-          <ErrorBoundary FallbackComponent={ErrorFallback}>
-            <Switch>
-              <Redirect from="/" to="/dashboard" exact />
-              <Route path="/dashboard" component={DashboardPage} />
-              <Route path="*" component={NotFoundPage} />
-            </Switch>
-          </ErrorBoundary>
-        </AppNavigation>
-      </React.Fragment>
-    </Fade>
-  </BrowserRouter>
-);
+const AuthenticatedApp = (props) => {
+  const { onLogout } = props;
+  return (
+    <BrowserRouter>
+      <Fade in>
+        <React.Fragment>
+          <AppNavigation onLogout={onLogout}>
+            <ErrorBoundary FallbackComponent={ErrorFallback}>
+              <Switch>
+                <Route path="/" component={DashboardPage} exact />
+                <Route path="/profile" component={ProfilePage} />
+                <Route path="/finance" component={FinancePage} />
+                <Route path="*" component={NotFoundPage} />
+              </Switch>
+            </ErrorBoundary>
+          </AppNavigation>
+        </React.Fragment>
+      </Fade>
+    </BrowserRouter>
+  );
+};
+
+AuthenticatedApp.propTypes = {
+  onLogout: Proptypes.func.isRequired,
+};
 
 export default AuthenticatedApp;

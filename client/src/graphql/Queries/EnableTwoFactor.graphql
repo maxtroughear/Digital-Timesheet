@@ -1,0 +1,3 @@
+mutation ENABLETWOFACTOR($secret: String! $token: String!) {
+  enableTwoFactor(secret: $secret token: $token)
+}

@@ -49,6 +49,14 @@ const client = new ApolloClient({
     authMiddleware,
     httpLink,
   ]),
+  defaultOptions: {
+    mutate: {
+      errorPolicy: 'ignore',
+    },
+    query: {
+      errorPolicy: 'ignore',
+    },
+  },
   resolvers,
   typeDefs,
   queryDeduplication: true,

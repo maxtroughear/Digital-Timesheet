@@ -1,0 +1,3 @@
+mutation DISABLETWOFACTOR($password: String!) {
+  disableTwoFactor(password: $password)
+}

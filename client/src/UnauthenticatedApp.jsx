@@ -2,7 +2,6 @@
 /** @jsxFrag React.Fragment */
 import { jsx } from '@emotion/core';
 import React, { useState, useCallback } from 'react';
-import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import { amber, green, red } from '@material-ui/core/colors';
@@ -115,7 +114,7 @@ const UnauthenticatedApp = (props) => {
   });
 
   const [loginMutation, {
-    data: loginData, loading: loginLoading, client,
+    loading: loginLoading, client,
   }] = useMutation(LOGIN, {
     fetchPolicy: 'no-cache',
     errorPolicy: 'none',
@@ -155,11 +154,6 @@ const UnauthenticatedApp = (props) => {
     }
     setTwoFactorEnabledOpen(false);
   };
-
-  const buttonClassname = clsx({
-    [classes.buttonSuccess]: loginData && loginData.userLogin && loginData.userLogin.token,
-    [classes.buttonWarning]: twoFactorEnabledOpen,
-  });
 
   const changeCompany = (event) => {
     event.preventDefault();
@@ -219,7 +213,6 @@ const UnauthenticatedApp = (props) => {
           color="primary"
           type="submit"
           disabled={loginLoading || success}
-          className={buttonClassname}
         >
           Login
         </Button>
@@ -246,7 +239,6 @@ const UnauthenticatedApp = (props) => {
           color="primary"
           type="submit"
           disabled={loginLoading || success}
-          className={buttonClassname}
         >
           Go
         </Button>

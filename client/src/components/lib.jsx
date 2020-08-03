@@ -101,6 +101,24 @@ function FullPageSpinner() {
   );
 }
 
+function FullPanelSpinner() {
+  return (
+    <div
+      css={{
+        fontSize: '4em',
+        height: '100%',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <CircularProgress />
+    </div>
+  );
+}
+
 const Link = styled(RouterLink)({
   color: colors.indigo,
   ':hover': {
@@ -118,5 +136,6 @@ export {
   Dialog,
   FormGroup,
   FullPageSpinner,
+  FullPanelSpinner,
   Link,
 };

@@ -31,8 +31,10 @@ func RequiredUsers(db *gorm.DB) {
 		CompanyID: company.ID,
 		// Check role
 	}).Attrs(model.User{
-		Username: "serviceadmin",
-		Password: hash,
+		Username:  "serviceadmin",
+		Firstname: "Service",
+		Lastname:  "Admin",
+		Password:  hash,
 		BuiltinRoles: []model.BuiltinRole{
 			serviceAdminRole,
 		},

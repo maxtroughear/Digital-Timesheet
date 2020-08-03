@@ -2,6 +2,8 @@ query ME {
   me {
     id
     username
+    firstname
+    lastname
     company {
       name
       code

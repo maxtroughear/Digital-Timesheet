@@ -23,19 +23,28 @@ import {
   fade,
   makeStyles,
   useTheme,
+  Collapse,
+  ListItemSecondaryAction,
 } from '@material-ui/core';
 import { Skeleton } from '@material-ui/lab';
+import { Link } from 'react-router-dom';
 
 import AccountCircle from '@material-ui/icons/AccountCircle';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
 import MenuIcon from '@material-ui/icons/Menu';
 import MoreIcon from '@material-ui/icons/MoreVert';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import SearchIcon from '@material-ui/icons/Search';
+import HomeIcon from '@material-ui/icons/Home';
+import GroupIcon from '@material-ui/icons/Group';
+import ReceiptIcon from '@material-ui/icons/Receipt';
+import DescriptionIcon from '@material-ui/icons/Description';
+import ExpandLess from '@material-ui/icons/ExpandLess';
+import ExpandMore from '@material-ui/icons/ExpandMore';
 
 import { useApolloClient, useQuery } from '@apollo/client';
 import { ME } from 'graphql/Queries';
+import { useStickyState } from 'hooks';
 
 const drawerWidth = 240;
 
@@ -61,6 +70,13 @@ const useStyles = makeStyles((theme) => ({
       display: 'none',
     },
   },
+  nested: {
+    '& > *': {
+      paddingLeft: theme.spacing(4),
+    },
+    backgroundColor: theme.palette.grey[100],
+  },
+
   // necessary for content to be below app bar
   toolbar: theme.mixins.toolbar,
 
@@ -150,11 +166,12 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function AppNavigation(props) {
-  const { window, children } = props;
+  const { children, onLogout } = props;
   const classes = useStyles();
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [doQueries, setDoQueries] = useState(true);
+
+  const [financesOpen, setFinancesOpen] = useStickyState(false);
 
   const client = useApolloClient();
 
@@ -169,9 +186,8 @@ function AppNavigation(props) {
   // TODO: Handle error and loading
   const { data } = useQuery(ME, {
     pollInterval: 60000,
-    errorPolicy: 'ignore',
+    errorPolicy: 'none',
     fetchPolicy: 'cache-first',
-    skip: !doQueries,
   });
 
   const handleProfileMenuOpen = (event) => {
@@ -191,14 +207,20 @@ function AppNavigation(props) {
     setMobileMoreAnchorEl(event.currentTarget);
   };
 
-  const handleLogout = () => {
-    setDoQueries(false);
+  const handleLogout = (event) => {
+    event.preventDefault();
     localStorage.clear();
-    client.resetStore();
+    client.clearStore().then(() => {
+      onLogout();
+    });
   };
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleFinancesClick = () => {
+    setFinancesOpen(!financesOpen);
   };
 
   // Drawer
@@ -209,7 +231,6 @@ function AppNavigation(props) {
       <div className={classes.drawerTitle}>
         <List>
           <ListItem>
-
             { data
               ? <ListItemText primary={data.me.company.name} primaryTypographyProps={{ variant: 'h6' }} />
               : <Skeleton animation="wave" height={40}><Typography variant="h6">Company Name</Typography></Skeleton> }
@@ -218,30 +239,56 @@ function AppNavigation(props) {
       </div>
       <Divider />
       <List>
-        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-          <ListItem button key={text}>
-            <ListItemIcon>
-              {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-            </ListItemIcon>
-            <ListItemText primary={text} />
-          </ListItem>
-        ))}
+        <ListItem button component={Link} to="/">
+          <ListItemIcon>
+            <HomeIcon />
+          </ListItemIcon>
+          <ListItemText primary="Dashboard" />
+        </ListItem>
       </List>
       <Divider />
       <List>
-        {['All mail', 'Trash', 'Spam'].map((text, index) => (
-          <ListItem button key={text}>
-            <ListItemIcon>
-              {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-            </ListItemIcon>
-            <ListItemText primary={text} />
-          </ListItem>
-        ))}
+        <ListItem button component={Link} to="/finance">
+          <ListItemIcon>
+            <DescriptionIcon />
+          </ListItemIcon>
+          <ListItemText primary="Finances" />
+          <ListItemSecondaryAction>
+            <IconButton onClick={handleFinancesClick}>
+              {financesOpen
+                ? <ExpandLess />
+                : <ExpandMore />}
+            </IconButton>
+          </ListItemSecondaryAction>
+        </ListItem>
+        <Collapse in={financesOpen} timeout="auto" unmountOnExit>
+          <List className={classes.nested}>
+            <ListItem button component={Link} to="/finance/clients">
+              <ListItemIcon>
+                <GroupIcon />
+              </ListItemIcon>
+              <ListItemText primary="Clients" />
+            </ListItem>
+            <ListItem button component={Link} to="/finance/quotes">
+              <ListItemIcon>
+                <DescriptionIcon />
+              </ListItemIcon>
+              <ListItemText primary="Quotes" />
+            </ListItem>
+            <ListItem button component={Link} to="/finance/invoices">
+              <ListItemIcon>
+                <ReceiptIcon />
+              </ListItemIcon>
+              <ListItemText primary="Invoices" />
+            </ListItem>
+          </List>
+        </Collapse>
       </List>
     </div>
   );
 
-  const container = window !== undefined ? () => window().document.body : undefined;
+  // const container = window !== undefined ? () => window().document.body : undefined;
+  const container = undefined;
 
   // Menus
 
@@ -256,8 +303,8 @@ function AppNavigation(props) {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+      {/* <MenuItem onClick={handleMenuClose}>Profile</MenuItem> */}
+      <MenuItem onClick={handleMenuClose} component={Link} to="/profile">My account</MenuItem>
       <MenuItem onClick={handleLogout}>Logout</MenuItem>
     </Menu>
   );
@@ -417,16 +464,8 @@ function AppNavigation(props) {
 }
 
 AppNavigation.propTypes = {
-  /**
-   * Injected by the documentation to work in an iframe.
-   * You won't need it on your project.
-   */
-  window: PropTypes.func,
   children: PropTypes.node.isRequired,
-};
-
-AppNavigation.defaultProps = {
-  window: undefined,
+  onLogout: PropTypes.func.isRequired,
 };
 
 export default AppNavigation;
