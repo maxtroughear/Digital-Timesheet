@@ -15,7 +15,7 @@ const IsLoggedIn = () => {
   // return <UnauthenticatedApp />;
 
   const { loading, error, refetch } = useQuery(ME, {
-    errorPolicy: 'all',
+    errorPolicy: 'none',
     fetchPolicy: 'network-only',
   });
 

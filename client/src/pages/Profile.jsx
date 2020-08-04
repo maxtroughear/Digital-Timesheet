@@ -282,7 +282,7 @@ const ProfilePage = () => {
 
   const { data: personalData, loading: personalLoading } = useQuery(ME, {
     fetchPolicy: 'cache-first',
-    errorPolicy: 'ignore',
+    errorPolicy: 'none',
   });
 
   const [twoFactorSecret, setTwoFactorSecret] = useState(authenticator.generateSecret());
