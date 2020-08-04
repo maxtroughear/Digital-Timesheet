@@ -201,8 +201,8 @@ const TwoFactorPanel = (props) => {
     <>
       <AccordionDetails className={classes.details}>
         <Fade in>
-          <>
-            <div className={classes.column}>
+          <Grid container>
+            <Grid item sm={4}>
               <Typography variant="body2">
                 <strong>1.</strong>
                 {' '}
@@ -210,18 +210,24 @@ const TwoFactorPanel = (props) => {
                 {' '}
                 <Link href="https://support.google.com/accounts/answer/1066447" rel="noopener noreferrer" target="_blank">Google Authenticator</Link>
               </Typography>
-            </div>
-            <div className={classes.column}>
-              {qrCodeUrl === ''
-                ? <Skeleton variant="rect" height="400px" />
-                : <img src={qrCodeUrl} alt="2FA QR Code" /> }
-              <Typography variant="caption">
-                Secret:
-                {' '}
-                {secret}
-              </Typography>
-            </div>
-            <div className={classes.column}>
+            </Grid>
+            <Grid item sm={4}>
+              <Grid container>
+                <Grid item sm={12}>
+                  {qrCodeUrl === ''
+                    ? <Skeleton variant="rect" height="400px" />
+                    : <img src={qrCodeUrl} alt="2FA QR Code" /> }
+                </Grid>
+                <Grid item sm={12}>
+                  <Typography variant="caption">
+                    Secret:
+                    {' '}
+                    {secret}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Grid>
+            <Grid item sm={4}>
               <Grid container spacing={3} justify="space-around">
                 <Grid item sm={12}>
                   <Typography variant="body2" gutterBottom>
@@ -245,8 +251,8 @@ const TwoFactorPanel = (props) => {
                   </form>
                 </Grid>
               </Grid>
-            </div>
-          </>
+            </Grid>
+          </Grid>
         </Fade>
       </AccordionDetails>
       <Divider />

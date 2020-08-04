@@ -1,27 +1,12 @@
 /** @jsx jsx */
 /** @jsxFrag React.Fragment */
 import { jsx } from '@emotion/core';
-import { Fade } from '@material-ui/core';
+import { lazy } from 'react';
 import { Switch, Route } from 'react-router-dom';
 import NotFoundPage from './NotFound';
 
-const FinanceDashboard = () => {
-  const title = 'Finances';
-  return (
-    <Fade in>
-      <h1>{title}</h1>
-    </Fade>
-  );
-};
-
-const ClientsDashboard = () => {
-  const title = 'Clients';
-  return (
-    <Fade in>
-      <h1>{title}</h1>
-    </Fade>
-  );
-};
+const FinanceDashboard = lazy(() => import('./finance/Dashboard'));
+const ClientsDashboard = lazy(() => import('./finance/Clients'));
 
 const FinancePage = () => (
   <Switch>
