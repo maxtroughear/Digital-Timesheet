@@ -13,10 +13,12 @@ import * as colours from 'styles/colours';
 
 import AppNavigation from 'components/AppNavigation';
 
-import DashboardPage from 'pages/DashboardPage';
 import NotFoundPage from 'pages/NotFound';
-import ProfilePage from 'pages/Profile';
-import FinancePage from 'pages/FinancePage';
+import { FullPanelSpinner } from 'components/lib';
+
+const DashboardPage = React.lazy(() => import('pages/DashboardPage'));
+const ProfilePage = React.lazy(() => import('pages/Profile'));
+const FinancePage = React.lazy(() => import('pages/FinancePage'));
 
 const ErrorFallback = ({ error }) => (
   <div role="alert" css={{ color: colours.danger, fontSize: '0.7em' }}>
@@ -54,14 +56,16 @@ const AuthenticatedApp = (props) => {
       <Fade in>
         <React.Fragment>
           <AppNavigation onLogout={onLogout}>
-            <ErrorBoundary FallbackComponent={ErrorFallback}>
-              <Switch>
-                <Route path="/" component={DashboardPage} exact />
-                <Route path="/profile" component={ProfilePage} />
-                <Route path="/finance" component={FinancePage} />
-                <Route path="*" component={NotFoundPage} />
-              </Switch>
-            </ErrorBoundary>
+            <React.Suspense fallback={<FullPanelSpinner />}>
+              <ErrorBoundary FallbackComponent={ErrorFallback}>
+                <Switch>
+                  <Route path="/" component={DashboardPage} exact />
+                  <Route path="/profile" component={ProfilePage} />
+                  <Route path="/finance" component={FinancePage} />
+                  <Route path="*" component={NotFoundPage} />
+                </Switch>
+              </ErrorBoundary>
+            </React.Suspense>
           </AppNavigation>
         </React.Fragment>
       </Fade>
