@@ -69,6 +69,25 @@ func (r *mutationResolver) LoginSecure(ctx context.Context, password string) (st
 	return auth.LoginUserSecure(auth.For(ctx).User, &r.Cfg.JWT)
 }
 
+func (r *mutationResolver) ChangePassword(ctx context.Context, oldPassword string, newPassword string) (bool, error) {
+	user := auth.For(ctx).User
+
+	if !auth.VerifyPassword(user, oldPassword) {
+		return false, fmt.Errorf("Password Incorrect")
+	}
+
+	hash, err := auth.HashPassword(newPassword)
+	if err != nil {
+		return false, fmt.Errorf("Bad password")
+	}
+
+	if err := r.DB.Model(&user).Update("Password", hash).Error; err != nil {
+		return true, err
+	}
+
+	return true, nil
+}
+
 func (r *mutationResolver) NewTwoFactorBackups(ctx context.Context) ([]string, error) {
 	panic(fmt.Errorf("not implemented"))
 }

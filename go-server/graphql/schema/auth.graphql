@@ -12,6 +12,7 @@ extend type Query {
 extend type Mutation {
   login(code: String!, username: String!, password: String!, twoFactor: String): AuthData!
   loginSecure(password: String!): String! @isAuthenticated
+  changePassword(oldPassword: String!, newPassword: String!): Boolean! @isAuthenticated
   newTwoFactorBackups: [String!]! @isAuthenticated
   enableTwoFactor(secret: String!, token: String!): [String!]! @isAuthenticated
   disableTwoFactor(password: String!): Boolean! @isAuthenticated

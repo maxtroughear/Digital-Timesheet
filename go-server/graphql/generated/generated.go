@@ -66,6 +66,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		ChangePassword      func(childComplexity int, oldPassword string, newPassword string) int
 		CreateCompany       func(childComplexity int, name string, code string) int
 		CreateUser          func(childComplexity int, code string, username string, password string) int
 		DisableTwoFactor    func(childComplexity int, password string) int
@@ -101,6 +102,7 @@ type CompanyResolver interface {
 type MutationResolver interface {
 	Login(ctx context.Context, code string, username string, password string, twoFactor *string) (*modelgen.AuthData, error)
 	LoginSecure(ctx context.Context, password string) (string, error)
+	ChangePassword(ctx context.Context, oldPassword string, newPassword string) (bool, error)
 	NewTwoFactorBackups(ctx context.Context) ([]string, error)
 	EnableTwoFactor(ctx context.Context, secret string, token string) ([]string, error)
 	DisableTwoFactor(ctx context.Context, password string) (bool, error)
@@ -184,6 +186,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Company.Users(childComplexity), true
+
+	case "Mutation.changePassword":
+		if e.complexity.Mutation.ChangePassword == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_changePassword_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ChangePassword(childComplexity, args["oldPassword"].(string), args["newPassword"].(string)), true
 
 	case "Mutation.createCompany":
 		if e.complexity.Mutation.CreateCompany == nil {
@@ -448,6 +462,7 @@ extend type Query {
 extend type Mutation {
   login(code: String!, username: String!, password: String!, twoFactor: String): AuthData!
   loginSecure(password: String!): String! @isAuthenticated
+  changePassword(oldPassword: String!, newPassword: String!): Boolean! @isAuthenticated
   newTwoFactorBackups: [String!]! @isAuthenticated
   enableTwoFactor(secret: String!, token: String!): [String!]! @isAuthenticated
   disableTwoFactor(password: String!): Boolean! @isAuthenticated
@@ -534,6 +549,28 @@ func (ec *executionContext) dir_hasPerms_args(ctx context.Context, rawArgs map[s
 		}
 	}
 	args["perms"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_changePassword_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["oldPassword"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["oldPassword"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["newPassword"]; ok {
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["newPassword"] = arg1
 	return args, nil
 }
 
@@ -1132,6 +1169,64 @@ func (ec *executionContext) _Mutation_loginSecure(ctx context.Context, field gra
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_changePassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_changePassword_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ChangePassword(rctx, args["oldPassword"].(string), args["newPassword"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_newTwoFactorBackups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3116,6 +3211,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "loginSecure":
 			out.Values[i] = ec._Mutation_loginSecure(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "changePassword":
+			out.Values[i] = ec._Mutation_changePassword(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
