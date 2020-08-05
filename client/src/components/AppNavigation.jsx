@@ -8,12 +8,9 @@ import {
   Badge,
   CssBaseline,
   Divider,
-  Drawer,
-  Hidden,
   IconButton,
   List,
   ListItem,
-  ListItemIcon,
   ListItemText,
   Menu,
   MenuItem,
@@ -22,9 +19,6 @@ import {
   Typography,
   fade,
   makeStyles,
-  useTheme,
-  Collapse,
-  ListItemSecondaryAction,
 } from '@material-ui/core';
 import { Skeleton } from '@material-ui/lab';
 import { Link } from 'react-router-dom';
@@ -39,14 +33,13 @@ import HomeIcon from '@material-ui/icons/Home';
 import GroupIcon from '@material-ui/icons/Group';
 import ReceiptIcon from '@material-ui/icons/Receipt';
 import DescriptionIcon from '@material-ui/icons/Description';
-import ExpandLess from '@material-ui/icons/ExpandLess';
-import ExpandMore from '@material-ui/icons/ExpandMore';
 
 import { useApolloClient, useQuery } from '@apollo/client';
 import { ME } from 'graphql/Queries';
-import { useStickyState } from 'hooks';
 
-const drawerWidth = 240;
+import {
+  Drawer, DrawerList, DrawerListItem, DrawerNestedList,
+} from './Drawer';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -54,12 +47,6 @@ const useStyles = makeStyles((theme) => ({
   },
   grow: {
     flexGrow: 1,
-  },
-  drawer: {
-    [theme.breakpoints.up('sm')]: {
-      width: drawerWidth,
-      flexShrink: 0,
-    },
   },
   appBar: {
     zIndex: theme.zIndex.drawer + 1,
@@ -70,26 +57,14 @@ const useStyles = makeStyles((theme) => ({
       display: 'none',
     },
   },
-  nested: {
-    '& > *': {
-      paddingLeft: theme.spacing(4),
-    },
-    backgroundColor: theme.palette.grey[100],
-  },
-
   // necessary for content to be below app bar
   toolbar: theme.mixins.toolbar,
-
   // toolbar only for the drawer
   [theme.breakpoints.up('sm')]: {
     drawerToolbar: theme.mixins.toolbar,
     drawerTitle: {
       display: 'none',
     },
-  },
-
-  drawerPaper: {
-    width: drawerWidth,
   },
   content: {
     flexGrow: 1,
@@ -168,10 +143,7 @@ const useStyles = makeStyles((theme) => ({
 function AppNavigation(props) {
   const { children, onLogout } = props;
   const classes = useStyles();
-  const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  const [financesOpen, setFinancesOpen] = useStickyState(false);
 
   const client = useApolloClient();
 
@@ -219,76 +191,40 @@ function AppNavigation(props) {
     setMobileOpen(!mobileOpen);
   };
 
-  const handleFinancesClick = () => {
-    setFinancesOpen(!financesOpen);
+  const drawerItemClick = () => {
+    console.log('click');
+
+    if (mobileOpen) {
+      setMobileOpen(false);
+    }
   };
 
   // Drawer
 
   const drawer = (
-    <div>
-      <div className={classes.drawerToolbar} />
-      <div className={classes.drawerTitle}>
-        <List>
-          <ListItem>
-            { data
-              ? <ListItemText primary={data.me.company.name} primaryTypographyProps={{ variant: 'h6' }} />
-              : <Skeleton animation="wave" height={40}><Typography variant="h6">Company Name</Typography></Skeleton> }
-          </ListItem>
-        </List>
-      </div>
-      <Divider />
-      <List>
-        <ListItem button component={Link} to="/">
-          <ListItemIcon>
-            <HomeIcon />
-          </ListItemIcon>
-          <ListItemText primary="Dashboard" />
-        </ListItem>
-      </List>
-      <Divider />
-      <List>
-        <ListItem button component={Link} to="/finance">
-          <ListItemIcon>
-            <DescriptionIcon />
-          </ListItemIcon>
-          <ListItemText primary="Finances" />
-          <ListItemSecondaryAction>
-            <IconButton onClick={handleFinancesClick}>
-              {financesOpen
-                ? <ExpandLess />
-                : <ExpandMore />}
-            </IconButton>
-          </ListItemSecondaryAction>
-        </ListItem>
-        <Collapse in={financesOpen} timeout="auto" unmountOnExit>
-          <List className={classes.nested}>
-            <ListItem button component={Link} to="/finance/clients">
-              <ListItemIcon>
-                <GroupIcon />
-              </ListItemIcon>
-              <ListItemText primary="Clients" />
-            </ListItem>
-            <ListItem button component={Link} to="/finance/quotes">
-              <ListItemIcon>
-                <DescriptionIcon />
-              </ListItemIcon>
-              <ListItemText primary="Quotes" />
-            </ListItem>
-            <ListItem button component={Link} to="/finance/invoices">
-              <ListItemIcon>
-                <ReceiptIcon />
-              </ListItemIcon>
-              <ListItemText primary="Invoices" />
+    <Drawer mobileOpen={mobileOpen} onClose={handleDrawerToggle} onOpen={handleDrawerToggle} onClick={drawerItemClick}>
+      <div>
+        <div className={classes.drawerToolbar} />
+        <div className={classes.drawerTitle}>
+          <List>
+            <ListItem>
+              { data
+                ? <ListItemText primary={data.me.company.name} primaryTypographyProps={{ variant: 'h6' }} />
+                : <Skeleton animation="wave" height={40}><Typography variant="h6">Company Name</Typography></Skeleton> }
             </ListItem>
           </List>
-        </Collapse>
-      </List>
-    </div>
+        </div>
+        <Divider />
+        <DrawerList><DrawerListItem to="/" icon={<HomeIcon />}>Dashboard</DrawerListItem></DrawerList>
+        <Divider />
+        <DrawerNestedList icon={<DescriptionIcon />} text="Finances" to="/finance">
+          <DrawerListItem icon={<GroupIcon />} to="/finance/clients">Clients</DrawerListItem>
+          <DrawerListItem icon={<DescriptionIcon />} to="/finance/quotes">Quotes</DrawerListItem>
+          <DrawerListItem icon={<ReceiptIcon />} to="/finance/invoices">Invoices</DrawerListItem>
+        </DrawerNestedList>
+      </div>
+    </Drawer>
   );
-
-  // const container = window !== undefined ? () => window().document.body : undefined;
-  const container = undefined;
 
   // Menus
 
@@ -359,6 +295,7 @@ function AppNavigation(props) {
             color="inherit"
             aria-label="open drawer"
             edge="start"
+            // TODO: Allow drawer to be opened from outside the drawer
             onClick={handleDrawerToggle}
             className={classes.menuButton}
           >
@@ -424,37 +361,8 @@ function AppNavigation(props) {
 
       {/* Drawer */}
 
-      <nav className={classes.drawer} aria-label="mailbox folders">
-        {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
-        <Hidden smUp implementation="css">
-          <Drawer
-            container={container}
-            variant="temporary"
-            anchor={theme.direction === 'rtl' ? 'right' : 'left'}
-            open={mobileOpen}
-            onClose={handleDrawerToggle}
-            classes={{
-              paper: classes.drawerPaper,
-            }}
-            ModalProps={{
-              keepMounted: true, // Better open performance on mobile.
-            }}
-          >
-            {drawer}
-          </Drawer>
-        </Hidden>
-        <Hidden xsDown implementation="css">
-          <Drawer
-            classes={{
-              paper: classes.drawerPaper,
-            }}
-            variant="permanent"
-            open
-          >
-            {drawer}
-          </Drawer>
-        </Hidden>
-      </nav>
+      {drawer}
+
       <main className={classes.content}>
         <div className={classes.toolbar} />
         {children}
