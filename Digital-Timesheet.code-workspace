@@ -53,6 +53,7 @@
     },
     "[go]": {
       "editor.formatOnSave": true,
+      "editor.codeActionsOnSaveTimeout": 3000,
       "editor.codeActionsOnSave": {
         "source.organizeImports": true,
       },
