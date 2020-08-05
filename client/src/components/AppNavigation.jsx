@@ -192,8 +192,6 @@ function AppNavigation(props) {
   };
 
   const drawerItemClick = () => {
-    console.log('click');
-
     if (mobileOpen) {
       setMobileOpen(false);
     }
@@ -202,7 +200,12 @@ function AppNavigation(props) {
   // Drawer
 
   const drawer = (
-    <Drawer mobileOpen={mobileOpen} onClose={handleDrawerToggle} onOpen={handleDrawerToggle} onClick={drawerItemClick}>
+    <Drawer
+      mobileOpen={mobileOpen}
+      onClose={handleDrawerToggle}
+      onOpen={handleDrawerToggle}
+      onClick={drawerItemClick}
+    >
       <div>
         <div className={classes.drawerToolbar} />
         <div className={classes.drawerTitle}>
