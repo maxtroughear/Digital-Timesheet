@@ -2,7 +2,6 @@
 /** @jsxFrag React.Fragment */
 import { jsx } from '@emotion/core';
 import React, { useMemo, useState } from 'react';
-import PropTypes from 'prop-types';
 import {
   Accordion,
   AccordionActions,
@@ -15,22 +14,26 @@ import {
   TextField,
   makeStyles,
   Divider,
-  Link,
   Grid,
 } from '@material-ui/core';
-import { Skeleton } from '@material-ui/lab';
 
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { useQuery, useMutation } from '@apollo/client';
 
 import { authenticator } from 'otplib';
-import qrcode from 'qrcode';
 
 import { FullPanelSpinner } from 'components/lib';
+import SnackbarAlert from 'components/SnackbarAlert';
 
 import {
-  ME, TWO_FACTOR_ENABLED, ENABLE_TWO_FACTOR, DISABLE_TWO_FACTOR,
+  ME,
 } from 'graphql/Queries';
+
+import {
+  CHANGE_PASSWORD,
+} from 'graphql/Mutations';
+
+import TwoFactorPanel from './profile/TwoFactorPanel';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -55,9 +58,6 @@ const useStyles = makeStyles((theme) => ({
   details: {
     alignItems: 'center',
   },
-  column: {
-    flexBasis: '33.33%',
-  },
   helper: {
     borderLeft: `2px solid ${theme.palette.divider}`,
     padding: theme.spacing(1, 2),
@@ -73,187 +73,121 @@ const useStyles = makeStyles((theme) => ({
     marginTop: -12,
     marginLeft: -12,
   },
+
+  button: {
+    margin: theme.spacing(1),
+  },
 }));
 
-const TwoFactorPanel = (props) => {
-  const { otpAuth, secret } = props;
+const ChangePasswordPanel = () => {
   const classes = useStyles();
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
 
-  const [password, setPassword] = useState('');
-  const [twoFactorCode, setTwoFactorCode] = useState('');
-  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-  const {
-    error: twoFactorError,
-    data: twoFactorData,
-    loading: twoFactorLoading,
-    refetch: twoFactorRefetch,
-  } = useQuery(TWO_FACTOR_ENABLED, {
-    fetchPolicy: 'network-only',
-  });
-
-  const [enableTwoFactor, {
-    loading: enableTwoFactorLoading,
-    error: enableTwoFactorError,
-  }] = useMutation(ENABLE_TWO_FACTOR, {
+  const [changePassword, { loading, error }] = useMutation(CHANGE_PASSWORD, {
     errorPolicy: 'none',
+    onError: () => {
+      setSnackbarOpen(true);
+    },
     onCompleted: () => {
-      setTimeout(() => {
-        twoFactorRefetch();
-      }, 500);
+      setSnackbarOpen(true);
+      setOldPassword('');
+      setNewPassword('');
+      setNewPasswordConfirm('');
     },
   });
 
-  const [disableTwoFactor, {
-    loading: disableTwoFactorLoading,
-    error: disableTwoFactorError,
-  }] = useMutation(DISABLE_TWO_FACTOR, {
-    errorPolicy: 'none',
-    onCompleted: () => {
-      setTimeout(() => {
-        twoFactorRefetch();
-      }, 500);
-    },
-  });
-
-  useMemo(() => qrcode.toDataURL(otpAuth, (err, imageUrl) => {
-    if (err) {
-      console.log('error with QR');
-    } else {
-      setQrCodeUrl(imageUrl);
-    }
-  }), [otpAuth]);
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
 
   const handleSave = (event) => {
     event.preventDefault();
-    enableTwoFactor({
+    if (oldPassword === newPassword) {
+      return;
+    }
+
+    if (newPassword !== newPasswordConfirm) {
+      return;
+    }
+
+    changePassword({
       variables: {
-        token: twoFactorCode,
-        secret,
+        oldPassword,
+        newPassword,
       },
     });
   };
 
-  const handleDisable = (event) => {
-    event.preventDefault();
-    disableTwoFactor({
-      variables: {
-        password,
-      },
-    });
+  const textErrorLabel = () => {
+    if (!oldPassword) {
+      return ' ';
+    }
+
+    if (oldPassword === newPassword) {
+      return 'Old password is the same';
+    }
+
+    return ' ';
   };
 
-  if (twoFactorLoading || twoFactorError) {
-    return (<Fade in><FullPanelSpinner /></Fade>);
-  }
-  if (twoFactorData.twoFactorEnabled) {
-    return (
-      <>
-        <AccordionDetails className={classes.details}>
-          <Fade in>
-            <Grid container spacing={3} justify="space-around" alignItems="baseline">
-              <Grid item sm={8}>
-                <Typography variant="body2">
-                  Enter your password to disable Two-Factor Authentication
-                </Typography>
-                <Typography variant="body2">
-                  Remember that this reduces the security of your account,
-                  so please be sure you wish to continue
-                </Typography>
-              </Grid>
-              <Grid item sm={4}>
-                <form onSubmit={handleDisable}>
-                  <TextField
-                    required
-                    label="Password"
-                    variant="outlined"
-                    type="password"
-                    error={!!disableTwoFactorError}
-                    helperText={disableTwoFactorError ? disableTwoFactorError.message : ' '}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </form>
-              </Grid>
-            </Grid>
-          </Fade>
-        </AccordionDetails>
-        <Divider />
-        <AccordionActions>
-          <Fade in>
-            <div className={classes.buttonWrapper}>
-              <Button
-                color="primary"
-                size="small"
-                disabled={disableTwoFactorLoading}
-                onClick={handleDisable}
-              >
-                Disable
-              </Button>
-              {disableTwoFactorLoading
-          && <CircularProgress size={24} className={classes.buttonProgress} />}
-            </div>
-          </Fade>
-        </AccordionActions>
-      </>
-    );
-  }
+  const textErrorConfirmLabel = () => {
+    if (newPassword !== newPasswordConfirm && newPasswordConfirm) {
+      return 'Passwords don\'t match';
+    }
+    return ' ';
+  };
+
+  const textError = () => (textErrorLabel() !== ' ');
+  const textErrorConfirm = () => (textErrorConfirmLabel() !== ' ');
+
   return (
-    <>
-      <AccordionDetails className={classes.details}>
-        <Fade in>
-          <Grid container>
-            <Grid item sm={4}>
-              <Typography variant="body2">
-                <strong>1.</strong>
-                {' '}
-                Scan the QR Code displayed in an app like
-                {' '}
-                <Link href="https://support.google.com/accounts/answer/1066447" rel="noopener noreferrer" target="_blank">Google Authenticator</Link>
-              </Typography>
-            </Grid>
-            <Grid item sm={4}>
-              <Grid container>
-                <Grid item sm={12}>
-                  {qrCodeUrl === ''
-                    ? <Skeleton variant="rect" height="400px" />
-                    : <img src={qrCodeUrl} alt="2FA QR Code" /> }
-                </Grid>
-                <Grid item sm={12}>
-                  <Typography variant="caption">
-                    Secret:
-                    {' '}
-                    {secret}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Grid>
-            <Grid item sm={4}>
-              <Grid container spacing={3} justify="space-around">
-                <Grid item sm={12}>
-                  <Typography variant="body2" gutterBottom>
-                    <strong>2.</strong>
-                    {' '}
-                    Then type the time based code displayed in the app here and click save
-                  </Typography>
-                </Grid>
-                <Grid item sm={12}>
-                  <form onSubmit={handleSave}>
-                    <TextField
-                      required
-                      label="2FA Code"
-                      variant="outlined"
-                      autoComplete="false"
-                      type="number"
-                      error={!!enableTwoFactorError}
-                      helperText={enableTwoFactorError ? enableTwoFactorError.message : ' '}
-                      onChange={(e) => setTwoFactorCode(e.target.value)}
-                    />
-                  </form>
-                </Grid>
-              </Grid>
-            </Grid>
+    <React.Fragment>
+      <AccordionDetails>
+        <Grid container spacing={1}>
+          <Grid item sm={4}>
+            {/* Use form only on old password to allow for autofillers to work */}
+            <form onSubmit={handleSave}>
+              <TextField
+                variant="outlined"
+                type="password"
+                label="Old Password"
+                value={oldPassword}
+                disabled={loading}
+                onChange={(e) => setOldPassword(e.target.value)}
+              />
+            </form>
           </Grid>
-        </Fade>
+          <Grid item sm={4}>
+            <TextField
+              variant="outlined"
+              type="password"
+              label="New Password"
+              value={newPassword}
+              disabled={loading}
+              error={textError()}
+              helperText={textErrorLabel() || ' '}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </Grid>
+          <Grid item sm={4}>
+            <TextField
+              variant="outlined"
+              type="password"
+              label="New Password Again"
+              value={newPasswordConfirm}
+              disabled={loading}
+              error={textErrorConfirm()}
+              helperText={textErrorConfirmLabel()}
+              onChange={(e) => setNewPasswordConfirm(e.target.value)}
+              onSubmit={handleSave}
+              onKeyPress={(e) => { if (e.key === 'Enter') handleSave(e); }}
+            />
+          </Grid>
+        </Grid>
       </AccordionDetails>
       <Divider />
       <AccordionActions>
@@ -262,33 +196,36 @@ const TwoFactorPanel = (props) => {
             <Button
               color="primary"
               size="small"
-              disabled={enableTwoFactorLoading}
+              disabled={loading}
               onClick={handleSave}
             >
               Save
             </Button>
-            {enableTwoFactorLoading
+            {loading
           && <CircularProgress size={24} className={classes.buttonProgress} />}
           </div>
         </Fade>
       </AccordionActions>
-    </>
-  );
-};
 
-TwoFactorPanel.propTypes = {
-  otpAuth: PropTypes.string.isRequired,
-  secret: PropTypes.string.isRequired,
+      <SnackbarAlert
+        open={snackbarOpen}
+        onClose={handleSnackbarClose}
+        severity={error ? 'error' : 'success'}
+        message={error ? error.message : 'Password Changed'}
+        vertical="top"
+        horizontal="center"
+      />
+    </React.Fragment>
+  );
 };
 
 const ProfilePage = () => {
   const classes = useStyles();
 
-  const [accordianExpanded, setAccordianExpanded] = React.useState('personal');
+  const [accordianExpanded, setAccordianExpanded] = useState('personal');
 
   const { data: personalData, loading: personalLoading } = useQuery(ME, {
     fetchPolicy: 'cache-first',
-    errorPolicy: 'none',
   });
 
   const [twoFactorSecret, setTwoFactorSecret] = useState(authenticator.generateSecret());
@@ -306,6 +243,10 @@ const ProfilePage = () => {
 
   const handleAccordianToggle = (panel) => (event, isExpanded) => {
     setAccordianExpanded(isExpanded ? panel : false);
+  };
+
+  const handleRegenerateTwoFactorSecret = () => {
+    setTwoFactorSecret(authenticator.generateSecret());
   };
 
   return (
@@ -342,9 +283,7 @@ const ProfilePage = () => {
               Change your password
             </Typography>
           </AccordionSummary>
-          <AccordionDetails>
-            Empty for now
-          </AccordionDetails>
+          <ChangePasswordPanel />
         </Accordion>
         <Accordion expanded={accordianExpanded === '2fa'} onChange={handleAccordianToggle('2fa')} TransitionProps={{ unmountOnExit: false }}>
           <AccordionSummary
@@ -354,10 +293,14 @@ const ProfilePage = () => {
           >
             <Typography className={classes.heading}>2FA</Typography>
             <Typography className={classes.secondaryHeading}>
-              Two-Factor Authentication Setup
+              Two-Factor Authentication Settings
             </Typography>
           </AccordionSummary>
-          <TwoFactorPanel otpAuth={otpAuth} secret={twoFactorSecret} />
+          <TwoFactorPanel
+            otpAuth={otpAuth}
+            secret={twoFactorSecret}
+            onRegenerateClick={handleRegenerateTwoFactorSecret}
+          />
         </Accordion>
         <Accordion expanded={accordianExpanded === 'other'} onChange={handleAccordianToggle('other')}>
           <AccordionSummary

@@ -12,7 +12,8 @@ import { useMutation, useQuery } from '@apollo/client';
 
 import SnackbarAlert from 'components/SnackbarAlert';
 
-import { LOGIN, IS_LOGGED_IN, COMPANY_NAME } from 'graphql/Queries';
+import { IS_LOGGED_IN, COMPANY_NAME } from 'graphql/Queries';
+import { LOGIN } from 'graphql/Mutations';
 import localStorageKey from 'utils/LocalStorageKey';
 
 const useStyles = makeStyles((theme) => ({
@@ -320,8 +321,22 @@ const UnauthenticatedApp = (props) => {
           </form>
         </Paper>
       </Fade>
-      <SnackbarAlert open={incorrectOpen} onClose={handleIncorrectClose} severity="error" message={errorMessage} />
-      <SnackbarAlert open={twoFactorEnabledOpen} onClose={handleTwoFactorEnabledClose} severity="warning" message="Two Factor Authentication is Enabled" />
+      <SnackbarAlert
+        open={incorrectOpen}
+        onClose={handleIncorrectClose}
+        severity="error"
+        message={errorMessage}
+        vertical="top"
+        horizontal="center"
+      />
+      <SnackbarAlert
+        open={twoFactorEnabledOpen}
+        onClose={handleTwoFactorEnabledClose}
+        severity="warning"
+        message="Two Factor Authentication is Enabled"
+        vertical="top"
+        horizontal="center"
+      />
     </div>
   );
 };

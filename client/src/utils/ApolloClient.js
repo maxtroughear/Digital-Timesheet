@@ -51,10 +51,10 @@ const client = new ApolloClient({
   ]),
   defaultOptions: {
     mutate: {
-      errorPolicy: 'none',
+      errorPolicy: 'all',
     },
     query: {
-      errorPolicy: 'none',
+      errorPolicy: 'all',
     },
   },
   resolvers,

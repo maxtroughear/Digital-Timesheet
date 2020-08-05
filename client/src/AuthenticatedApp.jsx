@@ -7,7 +7,7 @@ import {
 } from 'react-router-dom';
 import Proptypes from 'prop-types';
 import ErrorBoundary from 'react-error-boundary';
-import { Fade } from '@material-ui/core';
+import { Fade, Container } from '@material-ui/core';
 
 import * as colours from 'styles/colours';
 
@@ -56,16 +56,18 @@ const AuthenticatedApp = (props) => {
       <Fade in>
         <React.Fragment>
           <AppNavigation onLogout={onLogout}>
-            <React.Suspense fallback={<FullPanelSpinner />}>
-              <ErrorBoundary FallbackComponent={ErrorFallback}>
-                <Switch>
-                  <Route path="/" component={DashboardPage} exact />
-                  <Route path="/profile" component={ProfilePage} />
-                  <Route path="/finance" component={FinancePage} />
-                  <Route path="*" component={NotFoundPage} />
-                </Switch>
-              </ErrorBoundary>
-            </React.Suspense>
+            <Container maxWidth="xl">
+              <React.Suspense fallback={<FullPanelSpinner />}>
+                <ErrorBoundary FallbackComponent={ErrorFallback}>
+                  <Switch>
+                    <Route path="/" component={DashboardPage} exact />
+                    <Route path="/profile" component={ProfilePage} />
+                    <Route path="/finance" component={FinancePage} />
+                    <Route path="*" component={NotFoundPage} />
+                  </Switch>
+                </ErrorBoundary>
+              </React.Suspense>
+            </Container>
           </AppNavigation>
         </React.Fragment>
       </Fade>
