@@ -1,7 +1,7 @@
-mutation LOGIN($company: String! $username: String! $password: String! $twoFactor: String) {
-  login(code: $company username: $username password: $password twoFactor: $twoFactor) {
+mutation LOGIN($email: String! $password: String! $twoFactor: String) {
+  login(email: $email password: $password twoFactor: $twoFactor) {
     user {
-      username
+      email
     }
     token
     twoFactorEnabled

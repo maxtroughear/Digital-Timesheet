@@ -1,7 +1,9 @@
 query GET_USER($userID: ID) {
   user(id: $userID) {
     id
-    username
+    email
+    firstname
+    lastname
     company {
       name
       code

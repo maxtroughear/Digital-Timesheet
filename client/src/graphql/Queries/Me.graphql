@@ -1,7 +1,7 @@
 query ME {
   me {
     id
-    username
+    email
     firstname
     lastname
     company {

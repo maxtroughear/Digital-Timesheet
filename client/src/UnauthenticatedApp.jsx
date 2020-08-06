@@ -6,13 +6,13 @@ import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import { amber, green, red } from '@material-ui/core/colors';
 import {
-  Button, Paper, TextField, Typography, CircularProgress, Collapse, Fade, Link,
+  Button, Paper, TextField, Typography, CircularProgress, Collapse, Fade,
 } from '@material-ui/core';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 
 import SnackbarAlert from 'components/SnackbarAlert';
 
-import { IS_LOGGED_IN, COMPANY_NAME } from 'graphql/Queries';
+import { IS_LOGGED_IN } from 'graphql/Queries';
 import { LOGIN } from 'graphql/Mutations';
 import localStorageKey from 'utils/LocalStorageKey';
 
@@ -67,24 +67,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const getSubdomain = () => {
-  const baseDomain = process.env.REACT_APP_BASE_DOMAIN;
-  const baseDomainParts = baseDomain.split('.');
-  const { host } = window.location;
-  const hostParts = host.split('.');
-  if (hostParts.length > baseDomainParts.length) {
-    // has subdomain
-    return hostParts[0];
-  }
-  return '';
-};
-
-const subdomain = getSubdomain();
-
-const hasCompany = getSubdomain() !== '';
-
 const UnauthenticatedApp = (props) => {
-  // const client = useApolloClient();
   const classes = useStyles();
 
   const { onLogin } = props;
@@ -92,27 +75,11 @@ const UnauthenticatedApp = (props) => {
   const [incorrectOpen, setIncorrectOpen] = useState(false);
   const [twoFactorEnabledOpen, setTwoFactorEnabledOpen] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [company, setCompany] = useState(subdomain);
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [twoFactor, setTwoFactor] = useState('');
   const [success, setSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-
-  const {
-    data: companyNameData,
-    loading: companyNameLoading,
-    error: companyNameError,
-  } = useQuery(COMPANY_NAME, {
-    skip: !hasCompany,
-    variables: {
-      code: company,
-    },
-    errorPolicy: 'none',
-    // really nasty workaround
-    // see https://github.com/apollographql/apollo-client/issues/6190
-    fetchPolicy: !hasCompany ? 'cache-only' : 'cache-first',
-  });
 
   const [loginMutation, {
     loading: loginLoading, client,
@@ -130,7 +97,7 @@ const UnauthenticatedApp = (props) => {
       }
     }, [onLogin]),
     onError: useCallback((e) => {
-      setErrorMessage(e.message.replace('GraphQL error: ', ''));
+      setErrorMessage(e.message);
       setIncorrectOpen(true);
     }, []),
   });
@@ -156,40 +123,27 @@ const UnauthenticatedApp = (props) => {
     setTwoFactorEnabledOpen(false);
   };
 
-  const changeCompany = (event) => {
-    event.preventDefault();
-    window.location.host = process.env.REACT_APP_BASE_DOMAIN;
-  };
-
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (!hasCompany) {
-      window.location.host = `${company}.${process.env.REACT_APP_BASE_DOMAIN}`;
-    } else if (!loginLoading && !success) {
-      loginMutation({
-        variables: {
-          company,
-          username,
-          password,
-          twoFactor,
-        },
-      });
-    }
+    loginMutation({
+      variables: {
+        email,
+        password,
+        twoFactor,
+      },
+    });
+    // }
   };
 
-  const preventDefault = (event) => {
-    event.preventDefault();
-  };
-
-  const companyEnteredFormContents = (
+  const LoginFormContents = (
     <React.Fragment>
       <TextField
         required
         autoFocus
-        label="Username"
+        label="Email"
         variant="filled"
         disabled={loginLoading || success}
-        onChange={(e) => setUsername(e.target.value)}
+        onChange={(e) => setEmail(e.target.value)}
       />
       <TextField
         required
@@ -222,58 +176,6 @@ const UnauthenticatedApp = (props) => {
     </React.Fragment>
   );
 
-  const companyCodeFormContents = (
-    <React.Fragment>
-      <TextField
-        required
-        autoFocus
-        label="Company"
-        helperText="Your company's code"
-        variant="filled"
-        disabled={loginLoading || success || getSubdomain() !== ''}
-        value={company.toUpperCase()}
-        onChange={(e) => setCompany(e.target.value.toLowerCase())}
-      />
-      <div className={classes.buttonWrapper}>
-        <Button
-          variant="contained"
-          color="primary"
-          type="submit"
-          disabled={loginLoading || success}
-        >
-          Go
-        </Button>
-        {loginLoading && <CircularProgress size={24} className={classes.buttonProgress} />}
-      </div>
-    </React.Fragment>
-  );
-
-  const companyNotFound = (
-    <React.Fragment>
-      <Typography>
-        Company not found for code
-        {' '}
-        {company.toUpperCase()}
-      </Typography>
-      <Button onClick={changeCompany}>Go back</Button>
-    </React.Fragment>
-  );
-
-  const formContents = () => {
-    if (hasCompany) {
-      if (companyNameLoading) {
-        return (
-          <CircularProgress size={24} />
-        );
-      }
-      if (!companyNameError) {
-        return companyEnteredFormContents;
-      }
-      return companyNotFound;
-    }
-    return companyCodeFormContents;
-  };
-
   return (
     <div
       css={{
@@ -287,37 +189,11 @@ const UnauthenticatedApp = (props) => {
     >
       <Fade in={!success} onExited={handleLoginExited}>
         <Paper className={classes.root} elevation={5}>
-          {!hasCompany
-          && (
           <Typography variant="h3" gutterBottom>
-            KiwiSheets
+            KiwiSheets Login
           </Typography>
-          )}
-          {hasCompany && !companyNameError && !companyNameLoading && (
-            <React.Fragment>
-              <Typography variant="h5" align="center">
-                {companyNameLoading || companyNameError ? '' : companyNameData.companyName}
-                {' '}
-                Login
-              </Typography>
-              <Typography variant="subtitle1" align="center">
-                You can come back here using
-                <br />
-                <Link href="/" onClick={preventDefault}>
-                  {company.toUpperCase()}
-                  .
-                  {process.env.REACT_APP_BASE_DOMAIN.toUpperCase()}
-                </Link>
-              </Typography>
-              <Typography>
-                Not right?
-                {' '}
-                <Button onClick={changeCompany}>Go back</Button>
-              </Typography>
-            </React.Fragment>
-          )}
           <form className={classes.form} onSubmit={handleSubmit}>
-            {formContents()}
+            {LoginFormContents}
           </form>
         </Paper>
       </Fade>
