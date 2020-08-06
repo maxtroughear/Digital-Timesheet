@@ -8,33 +8,35 @@ import (
 	"fmt"
 
 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/auth"
-	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/dataloader"
 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/graphql/generated"
 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/graphql/modelgen"
 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model"
 )
 
-func (r *mutationResolver) Login(ctx context.Context, code string, username string, password string, twoFactor *string) (*modelgen.AuthData, error) {
+func (r *mutationResolver) Login(ctx context.Context, email string, password string, twoFactor *string) (*modelgen.AuthData, error) {
 	// TODO: move logic into auth package
 
-	company, err := dataloader.For(ctx).CompanyByCode.Load(code)
+	//company, err := dataloader.For(ctx).CompanyByCode.Load(code)
 
-	if err != nil || company == nil {
-		return nil, fmt.Errorf("Company not found")
-	}
+	// if err != nil || company == nil {
+	// 	return nil, fmt.Errorf("Company not found")
+	// }
 
 	// unique query so not using a dataloader
+
+	// TODO: Use a dataloader
+
 	var user model.User
 	if err := r.DB.Where(&model.User{
-		Username:  username,
-		CompanyID: company.ID,
-	}).First(&user).Error; err != nil {
-		return nil, fmt.Errorf("Username or Password Incorrect")
+		Email: email,
+		// CompanyID: company.ID,
+	}).Preload("Company").First(&user).Error; err != nil {
+		return nil, fmt.Errorf("Email or Password Incorrect")
 	}
-	user.Company = *company
+	//user.Company = *company
 
 	if !auth.VerifyPassword(&user, password) {
-		return nil, fmt.Errorf("Username or Password Incorrect")
+		return nil, fmt.Errorf("Email or Password Incorrect")
 	}
 
 	// check is 2FA is enabled

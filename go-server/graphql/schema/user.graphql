@@ -1,7 +1,7 @@
 type User {
   id: ID!
 	company: Company!
-	username: String!
+	email: String!
   firstname: String!
   lastname: String!
 }
@@ -12,5 +12,5 @@ extend type Query {
 }
 
 extend type Mutation {
-  createUser(code: String!, username: String!, password: String!): User @hasPerm(perm: "User:Create")
+  createUser(code: String!, email: String!, password: String!): User @hasPerm(perm: "User:Create")
 }

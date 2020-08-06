@@ -14,7 +14,7 @@ import (
 	"github.com/emvi/hide"
 )
 
-func (r *mutationResolver) CreateUser(ctx context.Context, code string, username string, password string) (*model.User, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, code string, email string, password string) (*model.User, error) {
 	// get code
 	company, err := dataloader.For(ctx).CompanyByCode.Load(code)
 
@@ -29,7 +29,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, code string, username
 
 	var user = model.User{
 		Company:  *company,
-		Username: username,
+		Email:    email,
 		Password: hash,
 	}
 

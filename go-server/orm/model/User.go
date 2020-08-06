@@ -9,11 +9,11 @@ import (
 // User model
 type User struct {
 	ModelSoftDelete
-	Username     string `gorm:"UNIQUE_INDEX:idx_user_company"`
+	Email     string `gorm:"UNIQUE_INDEX:idx_email"`
 	Password     string
 	Firstname    string
 	Lastname     string
-	CompanyID    hide.ID       `gorm:"unique_index:idx_user_company" json:"company"`
+	CompanyID    hide.ID       `gorm:"unique_index:idx_company" json:"company"`
 	Company      Company       `json:"-"`
 	BuiltinRoles []BuiltinRole `gorm:"many2many:user_builtinroles" json:"-"`
 	CustomRoles  []CustomRole  `gorm:"many2many:user_customroles" json:"-"`

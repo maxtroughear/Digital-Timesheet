@@ -37,7 +37,7 @@ func buildAndSignToken(u *model.User, cfg *util.JWTConfig, expires time.Duration
 		StandardClaims: jwt.StandardClaims{
 			Issuer:   "dts",
 			IssuedAt: time.Now().Unix(),
-			Subject:  u.Company.Code + "/" + u.Username,
+			Subject:  u.Company.Code + "/" + u.Email,
 		},
 	}
 

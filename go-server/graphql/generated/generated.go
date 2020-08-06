@@ -68,10 +68,10 @@ type ComplexityRoot struct {
 	Mutation struct {
 		ChangePassword      func(childComplexity int, oldPassword string, newPassword string) int
 		CreateCompany       func(childComplexity int, name string, code string) int
-		CreateUser          func(childComplexity int, code string, username string, password string) int
+		CreateUser          func(childComplexity int, code string, email string, password string) int
 		DisableTwoFactor    func(childComplexity int, password string) int
 		EnableTwoFactor     func(childComplexity int, secret string, token string) int
-		Login               func(childComplexity int, code string, username string, password string, twoFactor *string) int
+		Login               func(childComplexity int, email string, password string, twoFactor *string) int
 		LoginSecure         func(childComplexity int, password string) int
 		NewTwoFactorBackups func(childComplexity int) int
 	}
@@ -89,10 +89,10 @@ type ComplexityRoot struct {
 
 	User struct {
 		Company   func(childComplexity int) int
+		Email     func(childComplexity int) int
 		Firstname func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Lastname  func(childComplexity int) int
-		Username  func(childComplexity int) int
 	}
 }
 
@@ -100,14 +100,14 @@ type CompanyResolver interface {
 	Users(ctx context.Context, obj *model.Company) ([]*model.User, error)
 }
 type MutationResolver interface {
-	Login(ctx context.Context, code string, username string, password string, twoFactor *string) (*modelgen.AuthData, error)
+	Login(ctx context.Context, email string, password string, twoFactor *string) (*modelgen.AuthData, error)
 	LoginSecure(ctx context.Context, password string) (string, error)
 	ChangePassword(ctx context.Context, oldPassword string, newPassword string) (bool, error)
 	NewTwoFactorBackups(ctx context.Context) ([]string, error)
 	EnableTwoFactor(ctx context.Context, secret string, token string) ([]string, error)
 	DisableTwoFactor(ctx context.Context, password string) (bool, error)
 	CreateCompany(ctx context.Context, name string, code string) (*model.Company, error)
-	CreateUser(ctx context.Context, code string, username string, password string) (*model.User, error)
+	CreateUser(ctx context.Context, code string, email string, password string) (*model.User, error)
 }
 type QueryResolver interface {
 	Version(ctx context.Context) (string, error)
@@ -221,7 +221,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateUser(childComplexity, args["code"].(string), args["username"].(string), args["password"].(string)), true
+		return e.complexity.Mutation.CreateUser(childComplexity, args["code"].(string), args["email"].(string), args["password"].(string)), true
 
 	case "Mutation.disableTwoFactor":
 		if e.complexity.Mutation.DisableTwoFactor == nil {
@@ -257,7 +257,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Login(childComplexity, args["code"].(string), args["username"].(string), args["password"].(string), args["twoFactor"].(*string)), true
+		return e.complexity.Mutation.Login(childComplexity, args["email"].(string), args["password"].(string), args["twoFactor"].(*string)), true
 
 	case "Mutation.loginSecure":
 		if e.complexity.Mutation.LoginSecure == nil {
@@ -356,6 +356,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Company(childComplexity), true
 
+	case "User.email":
+		if e.complexity.User.Email == nil {
+			break
+		}
+
+		return e.complexity.User.Email(childComplexity), true
+
 	case "User.firstname":
 		if e.complexity.User.Firstname == nil {
 			break
@@ -376,13 +383,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Lastname(childComplexity), true
-
-	case "User.username":
-		if e.complexity.User.Username == nil {
-			break
-		}
-
-		return e.complexity.User.Username(childComplexity), true
 
 	}
 	return 0, false
@@ -448,7 +448,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	&ast.Source{Name: "graphql/schema/auth.graphql", Input: `type AuthData {
+	{Name: "graphql/schema/auth.graphql", Input: `type AuthData {
   user: User
 	token: String
   twoFactorEnabled: Boolean!
@@ -460,14 +460,14 @@ extend type Query {
 }
 
 extend type Mutation {
-  login(code: String!, username: String!, password: String!, twoFactor: String): AuthData!
+  login(email: String!, password: String!, twoFactor: String): AuthData!
   loginSecure(password: String!): String! @isAuthenticated
   changePassword(oldPassword: String!, newPassword: String!): Boolean! @isAuthenticated
   newTwoFactorBackups: [String!]! @isAuthenticated
   enableTwoFactor(secret: String!, token: String!): [String!]! @isAuthenticated
   disableTwoFactor(password: String!): Boolean! @isAuthenticated
 }`, BuiltIn: false},
-	&ast.Source{Name: "graphql/schema/company.graphql", Input: `type Company {
+	{Name: "graphql/schema/company.graphql", Input: `type Company {
   id: ID!
 	name: String!
 	code: String!
@@ -482,7 +482,7 @@ extend type Query {
 extend type Mutation {
   createCompany(name: String!, code: String!): Company! @hasPerm(perm: "Company:Create")
 }`, BuiltIn: false},
-	&ast.Source{Name: "graphql/schema/schema.graphql", Input: `directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+	{Name: "graphql/schema/schema.graphql", Input: `directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
 directive @isAuthenticated on FIELD | FIELD_DEFINITION
 
@@ -501,10 +501,10 @@ type Query {
   test: String! @hasPerm(perm: "Test:Read")
 }
 `, BuiltIn: false},
-	&ast.Source{Name: "graphql/schema/user.graphql", Input: `type User {
+	{Name: "graphql/schema/user.graphql", Input: `type User {
   id: ID!
 	company: Company!
-	username: String!
+	email: String!
   firstname: String!
   lastname: String!
 }
@@ -515,7 +515,7 @@ extend type Query {
 }
 
 extend type Mutation {
-  createUser(code: String!, username: String!, password: String!): User @hasPerm(perm: "User:Create")
+  createUser(code: String!, email: String!, password: String!): User @hasPerm(perm: "User:Create")
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -529,6 +529,7 @@ func (ec *executionContext) dir_hasPerm_args(ctx context.Context, rawArgs map[st
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["perm"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("perm"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -543,6 +544,7 @@ func (ec *executionContext) dir_hasPerms_args(ctx context.Context, rawArgs map[s
 	args := map[string]interface{}{}
 	var arg0 []string
 	if tmp, ok := rawArgs["perms"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("perms"))
 		arg0, err = ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -557,6 +559,7 @@ func (ec *executionContext) field_Mutation_changePassword_args(ctx context.Conte
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["oldPassword"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("oldPassword"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -565,6 +568,7 @@ func (ec *executionContext) field_Mutation_changePassword_args(ctx context.Conte
 	args["oldPassword"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["newPassword"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("newPassword"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -579,6 +583,7 @@ func (ec *executionContext) field_Mutation_createCompany_args(ctx context.Contex
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("name"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -587,6 +592,7 @@ func (ec *executionContext) field_Mutation_createCompany_args(ctx context.Contex
 	args["name"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("code"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -601,6 +607,7 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("code"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -608,15 +615,17 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	}
 	args["code"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["username"]; ok {
+	if tmp, ok := rawArgs["email"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("email"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["username"] = arg1
+	args["email"] = arg1
 	var arg2 string
 	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg2, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -631,6 +640,7 @@ func (ec *executionContext) field_Mutation_disableTwoFactor_args(ctx context.Con
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -645,6 +655,7 @@ func (ec *executionContext) field_Mutation_enableTwoFactor_args(ctx context.Cont
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["secret"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("secret"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -653,6 +664,7 @@ func (ec *executionContext) field_Mutation_enableTwoFactor_args(ctx context.Cont
 	args["secret"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["token"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("token"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -667,6 +679,7 @@ func (ec *executionContext) field_Mutation_loginSecure_args(ctx context.Context,
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -680,37 +693,32 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["code"]; ok {
+	if tmp, ok := rawArgs["email"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("email"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["code"] = arg0
+	args["email"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["username"]; ok {
+	if tmp, ok := rawArgs["password"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("password"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["username"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["password"]; ok {
-		arg2, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["password"] = arg2
-	var arg3 *string
+	args["password"] = arg1
+	var arg2 *string
 	if tmp, ok := rawArgs["twoFactor"]; ok {
-		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("twoFactor"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["twoFactor"] = arg3
+	args["twoFactor"] = arg2
 	return args, nil
 }
 
@@ -719,6 +727,7 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("name"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -733,6 +742,7 @@ func (ec *executionContext) field_Query_companyName_args(ctx context.Context, ra
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["code"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("code"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -747,6 +757,7 @@ func (ec *executionContext) field_Query_company_args(ctx context.Context, rawArg
 	args := map[string]interface{}{}
 	var arg0 *hide.ID
 	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("id"))
 		arg0, err = ec.unmarshalOID2ᚖgithubᚗcomᚋemviᚋhideᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -761,6 +772,7 @@ func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs m
 	args := map[string]interface{}{}
 	var arg0 hide.ID
 	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("id"))
 		arg0, err = ec.unmarshalNID2githubᚗcomᚋemviᚋhideᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -775,6 +787,7 @@ func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, ra
 	args := map[string]interface{}{}
 	var arg0 bool
 	if tmp, ok := rawArgs["includeDeprecated"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("includeDeprecated"))
 		arg0, err = ec.unmarshalOBoolean2bool(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -789,6 +802,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 	args := map[string]interface{}{}
 	var arg0 bool
 	if tmp, ok := rawArgs["includeDeprecated"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("includeDeprecated"))
 		arg0, err = ec.unmarshalOBoolean2bool(ctx, tmp)
 		if err != nil {
 			return nil, err
@@ -1099,7 +1113,7 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 	fc.Args = args
 	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Login(rctx, args["code"].(string), args["username"].(string), args["password"].(string), args["twoFactor"].(*string))
+		return ec.resolvers.Mutation().Login(rctx, args["email"].(string), args["password"].(string), args["twoFactor"].(*string))
 	})
 
 	if resTmp == nil {
@@ -1483,7 +1497,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateUser(rctx, args["code"].(string), args["username"].(string), args["password"].(string))
+			return ec.resolvers.Mutation().CreateUser(rctx, args["code"].(string), args["email"].(string), args["password"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			perm, err := ec.unmarshalNString2string(ctx, "User:Create")
@@ -2047,7 +2061,7 @@ func (ec *executionContext) _User_company(ctx context.Context, field graphql.Col
 	return ec.marshalNCompany2ᚖgitᚗmaxtroughearᚗdevᚋmaxᚗtroughearᚋdigitalᚑtimesheetᚋgoᚑserverᚋormᚋmodelᚐCompany(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _User_username(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+func (ec *executionContext) _User_email(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2064,7 +2078,7 @@ func (ec *executionContext) _User_username(ctx context.Context, field graphql.Co
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp := ec._fieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Username, nil
+		return obj.Email, nil
 	})
 
 	if resTmp == nil {
@@ -3424,8 +3438,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 				}
 				return res
 			})
-		case "username":
-			out.Values[i] = ec._User_username(ctx, field, obj)
+		case "email":
+			out.Values[i] = ec._User_email(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -3710,7 +3724,8 @@ func (ec *executionContext) marshalNAuthData2ᚖgitᚗmaxtroughearᚗdevᚋmax�
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
-	return graphql.UnmarshalBoolean(v)
+	res, err := graphql.UnmarshalBoolean(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
@@ -3738,7 +3753,8 @@ func (ec *executionContext) marshalNCompany2ᚖgitᚗmaxtroughearᚗdevᚋmaxᚗ
 }
 
 func (ec *executionContext) unmarshalNID2githubᚗcomᚋemviᚋhideᚐID(ctx context.Context, v interface{}) (hide.ID, error) {
-	return model.UnmarshalID(v)
+	res, err := model.UnmarshalID(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNID2githubᚗcomᚋemviᚋhideᚐID(ctx context.Context, sel ast.SelectionSet, v hide.ID) graphql.Marshaler {
@@ -3752,7 +3768,8 @@ func (ec *executionContext) marshalNID2githubᚗcomᚋemviᚋhideᚐID(ctx conte
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalString(v)
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
@@ -3777,9 +3794,10 @@ func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v
 	var err error
 	res := make([]string, len(vSlice))
 	for i := range vSlice {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithIndex(i))
 		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
 		if err != nil {
-			return nil, err
+			return nil, graphql.WrapErrorWithInputPath(ctx, err)
 		}
 	}
 	return res, nil
@@ -3887,7 +3905,8 @@ func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgq
 }
 
 func (ec *executionContext) unmarshalN__DirectiveLocation2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalString(v)
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__DirectiveLocation2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
@@ -3912,9 +3931,10 @@ func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstringᚄ(ctx conte
 	var err error
 	res := make([]string, len(vSlice))
 	for i := range vSlice {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithIndex(i))
 		res[i], err = ec.unmarshalN__DirectiveLocation2string(ctx, vSlice[i])
 		if err != nil {
-			return nil, err
+			return nil, graphql.WrapErrorWithInputPath(ctx, err)
 		}
 	}
 	return res, nil
@@ -4058,7 +4078,8 @@ func (ec *executionContext) marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 }
 
 func (ec *executionContext) unmarshalN__TypeKind2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalString(v)
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
@@ -4072,7 +4093,8 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
-	return graphql.UnmarshalBoolean(v)
+	res, err := graphql.UnmarshalBoolean(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
@@ -4084,7 +4106,7 @@ func (ec *executionContext) unmarshalOBoolean2ᚖbool(ctx context.Context, v int
 		return nil, nil
 	}
 	res, err := ec.unmarshalOBoolean2bool(ctx, v)
-	return &res, err
+	return &res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast.SelectionSet, v *bool) graphql.Marshaler {
@@ -4095,7 +4117,8 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 }
 
 func (ec *executionContext) unmarshalOID2githubᚗcomᚋemviᚋhideᚐID(ctx context.Context, v interface{}) (hide.ID, error) {
-	return model.UnmarshalID(v)
+	res, err := model.UnmarshalID(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOID2githubᚗcomᚋemviᚋhideᚐID(ctx context.Context, sel ast.SelectionSet, v hide.ID) graphql.Marshaler {
@@ -4107,7 +4130,7 @@ func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋemviᚋhideᚐID(ctx 
 		return nil, nil
 	}
 	res, err := ec.unmarshalOID2githubᚗcomᚋemviᚋhideᚐID(ctx, v)
-	return &res, err
+	return &res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋemviᚋhideᚐID(ctx context.Context, sel ast.SelectionSet, v *hide.ID) graphql.Marshaler {
@@ -4118,7 +4141,8 @@ func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋemviᚋhideᚐID(ctx co
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalString(v)
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
@@ -4130,7 +4154,7 @@ func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v in
 		return nil, nil
 	}
 	res, err := ec.unmarshalOString2string(ctx, v)
-	return &res, err
+	return &res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {

@@ -10,7 +10,7 @@ extend type Query {
 }
 
 extend type Mutation {
-  login(code: String!, username: String!, password: String!, twoFactor: String): AuthData!
+  login(email: String!, password: String!, twoFactor: String): AuthData!
   loginSecure(password: String!): String! @isAuthenticated
   changePassword(oldPassword: String!, newPassword: String!): Boolean! @isAuthenticated
   newTwoFactorBackups: [String!]! @isAuthenticated

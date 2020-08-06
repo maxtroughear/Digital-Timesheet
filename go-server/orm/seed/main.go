@@ -31,7 +31,7 @@ func RequiredUsers(db *gorm.DB) {
 		CompanyID: company.ID,
 		// Check role
 	}).Attrs(model.User{
-		Username:  "serviceadmin",
+		Email:     "serviceadmin@kiwisheets.com",
 		Firstname: "Service",
 		Lastname:  "Admin",
 		Password:  hash,
