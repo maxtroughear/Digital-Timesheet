@@ -183,6 +183,9 @@ function AppNavigation(props) {
     event.preventDefault();
     localStorage.clear();
     client.clearStore().then(() => {
+    }).catch((error) => {
+      console.log(error);
+    }).finally(() => {
       onLogout();
     });
   };
