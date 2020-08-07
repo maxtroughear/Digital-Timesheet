@@ -233,7 +233,7 @@ const ProfilePage = () => {
   const otpAuth = useMemo(() => {
     if (personalData) {
       return authenticator.keyuri(
-        personalData.me.username,
+        personalData.me.email,
         personalData.me.company.name,
         twoFactorSecret,
       );
