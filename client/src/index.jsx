@@ -1,5 +1,11 @@
+// polyfill internet explorer 11
+import 'react-app-polyfill/ie11';
+import 'react-app-polyfill/stable';
+// polyfill fetch
+import 'unfetch/polyfill';
 import React from 'react';
 import ReactDOM from 'react-dom';
+
 import { ApolloProvider } from '@apollo/client';
 import { ThemeProvider } from '@material-ui/core';
 import CssBaseline from '@material-ui/core/CssBaseline';

@@ -140,5 +140,5 @@ volumes:
   pg-db:
     driver_opts: 
       type: none
-      device: /mnt/edge/db
+      device: /mnt/backbone/edge/db-edge
       o: bind

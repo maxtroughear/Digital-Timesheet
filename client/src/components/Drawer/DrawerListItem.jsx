@@ -20,7 +20,7 @@ const DrawerListItem = (props) => {
   const onClick = useContext(Context);
 
   return (
-    <ListItem button component={Link} to={to} onClick={onClick}>
+    <ListItem button component={Link} to={to} onClick={onClick} key={children}>
       {icon && (
       <ListItemIcon>
         {icon}
