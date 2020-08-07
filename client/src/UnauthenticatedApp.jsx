@@ -37,9 +37,12 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: 'center',
     width: '100%',
   },
-  formTextField: {
+  formField: {
     maxWidth: '400px',
     width: '80%',
+  },
+  formFieldCollapseInner: {
+    width: '100%',
   },
   buttonWrapper: {
     margin: theme.spacing(1),
@@ -147,7 +150,7 @@ const UnauthenticatedApp = (props) => {
         autoFocus
         label="Email"
         variant="filled"
-        className={classes.formTextField}
+        className={classes.formField}
         disabled={loginLoading || success}
         onChange={(e) => setEmail(e.target.value)}
       />
@@ -156,15 +159,15 @@ const UnauthenticatedApp = (props) => {
         label="Password"
         type="password"
         variant="filled"
-        className={classes.formTextField}
+        className={classes.formField}
         disabled={loginLoading || success}
         onChange={(e) => setPassword(e.target.value)}
       />
-      <Collapse in={twoFactorEnabled}>
+      <Collapse in={twoFactorEnabled} className={classes.formField}>
         <TextField
           label="2FA code"
           variant="filled"
-          className={classes.formTextField}
+          className={classes.formFieldCollapseInner}
           required={twoFactorEnabled}
           disabled={!twoFactorEnabled || loginLoading || success}
           onChange={(e) => setTwoFactor(e.target.value)}
