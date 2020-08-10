@@ -18,6 +18,12 @@ func (r *companyResolver) Users(ctx context.Context, obj *model.Company) ([]*mod
 	return dataloader.For(ctx).UsersByCompanyID.Load(int64(obj.ID))
 }
 
+func (r *companyResolver) Domains(ctx context.Context, obj *model.Company) ([]string, error) {
+	// dataloader.For(ctx).DomainsByCompanyID
+
+	return make([]string, 0), nil
+}
+
 func (r *mutationResolver) CreateCompany(ctx context.Context, name string, code string) (*model.Company, error) {
 	var company = model.Company{
 		Code: code,

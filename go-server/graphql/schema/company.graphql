@@ -3,6 +3,7 @@ type Company {
 	name: String!
 	code: String!
   users: [User!]! @goField(forceResolver: true)
+  domains: [String!]!
 }
 
 extend type Query {

@@ -14,13 +14,24 @@ import (
 	"github.com/emvi/hide"
 )
 
-func (r *mutationResolver) CreateUser(ctx context.Context, code string, email string, password string) (*model.User, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, code *string, email string, password string) (*model.User, error) {
 	// get code
-	company, err := dataloader.For(ctx).CompanyByCode.Load(code)
 
-	if err != nil {
-		return nil, fmt.Errorf("unable to create User. Company not found")
+	var company *model.Company
+
+	if code == nil {
+		// if no code is provided, use currently logged in user's company
+		company = &auth.For(ctx).User.Company
+	} else {
+		// find valid code
+		var err error
+		company, err = dataloader.For(ctx).CompanyByCode.Load(*code)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create User. Company not found")
+		}
 	}
+
+	// verify that this user has the ability to create a user for this company
 
 	hash, err := auth.HashPassword(password)
 	if err != nil {
@@ -38,6 +49,10 @@ func (r *mutationResolver) CreateUser(ctx context.Context, code string, email st
 	}
 
 	return &user, nil
+}
+
+func (r *mutationResolver) DeleteUser(ctx context.Context, id hide.ID) (bool, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {

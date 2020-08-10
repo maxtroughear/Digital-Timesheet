@@ -16,6 +16,16 @@ func RequiredUsers(db *gorm.DB) {
 		Name: "Service Admins",
 	}).FirstOrCreate(&company)
 
+	var domain model.Domain
+
+	// TODO: make default domain configurable via env variables
+	db.Where(model.Domain{
+		Domain:    "kiwisheets.com",
+		CompanyID: company.ID,
+		Company:   company,
+	}).FirstOrCreate(&domain)
+
+	// TODO: make default password configurable via env variables
 	hash, _ := auth.HashPassword("servicepass")
 
 	var serviceAdminRole model.BuiltinRole
@@ -31,7 +41,7 @@ func RequiredUsers(db *gorm.DB) {
 		CompanyID: company.ID,
 		// Check role
 	}).Attrs(model.User{
-		Email:     "serviceadmin@kiwisheets.com",
+		Email:     "serviceadmin@" + domain.Domain,
 		Firstname: "Service",
 		Lastname:  "Admin",
 		Password:  hash,

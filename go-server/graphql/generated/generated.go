@@ -59,16 +59,18 @@ type ComplexityRoot struct {
 	}
 
 	Company struct {
-		Code  func(childComplexity int) int
-		ID    func(childComplexity int) int
-		Name  func(childComplexity int) int
-		Users func(childComplexity int) int
+		Code    func(childComplexity int) int
+		Domains func(childComplexity int) int
+		ID      func(childComplexity int) int
+		Name    func(childComplexity int) int
+		Users   func(childComplexity int) int
 	}
 
 	Mutation struct {
 		ChangePassword      func(childComplexity int, oldPassword string, newPassword string) int
 		CreateCompany       func(childComplexity int, name string, code string) int
-		CreateUser          func(childComplexity int, code string, email string, password string) int
+		CreateUser          func(childComplexity int, code *string, email string, password string) int
+		DeleteUser          func(childComplexity int, id hide.ID) int
 		DisableTwoFactor    func(childComplexity int, password string) int
 		EnableTwoFactor     func(childComplexity int, secret string, token string) int
 		Login               func(childComplexity int, email string, password string, twoFactor *string) int
@@ -98,6 +100,7 @@ type ComplexityRoot struct {
 
 type CompanyResolver interface {
 	Users(ctx context.Context, obj *model.Company) ([]*model.User, error)
+	Domains(ctx context.Context, obj *model.Company) ([]string, error)
 }
 type MutationResolver interface {
 	Login(ctx context.Context, email string, password string, twoFactor *string) (*modelgen.AuthData, error)
@@ -107,7 +110,8 @@ type MutationResolver interface {
 	EnableTwoFactor(ctx context.Context, secret string, token string) ([]string, error)
 	DisableTwoFactor(ctx context.Context, password string) (bool, error)
 	CreateCompany(ctx context.Context, name string, code string) (*model.Company, error)
-	CreateUser(ctx context.Context, code string, email string, password string) (*model.User, error)
+	CreateUser(ctx context.Context, code *string, email string, password string) (*model.User, error)
+	DeleteUser(ctx context.Context, id hide.ID) (bool, error)
 }
 type QueryResolver interface {
 	Version(ctx context.Context) (string, error)
@@ -166,6 +170,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Company.Code(childComplexity), true
 
+	case "Company.domains":
+		if e.complexity.Company.Domains == nil {
+			break
+		}
+
+		return e.complexity.Company.Domains(childComplexity), true
+
 	case "Company.id":
 		if e.complexity.Company.ID == nil {
 			break
@@ -221,7 +232,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateUser(childComplexity, args["code"].(string), args["email"].(string), args["password"].(string)), true
+		return e.complexity.Mutation.CreateUser(childComplexity, args["code"].(*string), args["email"].(string), args["password"].(string)), true
+
+	case "Mutation.deleteUser":
+		if e.complexity.Mutation.DeleteUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteUser(childComplexity, args["id"].(hide.ID)), true
 
 	case "Mutation.disableTwoFactor":
 		if e.complexity.Mutation.DisableTwoFactor == nil {
@@ -472,6 +495,7 @@ extend type Mutation {
 	name: String!
 	code: String!
   users: [User!]! @goField(forceResolver: true)
+  domains: [String!]!
 }
 
 extend type Query {
@@ -515,7 +539,8 @@ extend type Query {
 }
 
 extend type Mutation {
-  createUser(code: String!, email: String!, password: String!): User @hasPerm(perm: "User:Create")
+  createUser(code: String, email: String!, password: String!): User @hasPerm(perm: "User:Create")
+  deleteUser(id: ID!): Boolean! @hasPerm(perm: "User:Delete")
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -605,10 +630,10 @@ func (ec *executionContext) field_Mutation_createCompany_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 *string
 	if tmp, ok := rawArgs["code"]; ok {
 		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("code"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -632,6 +657,21 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 		}
 	}
 	args["password"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 hide.ID
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("id"))
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋemviᚋhideᚐID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -1089,6 +1129,37 @@ func (ec *executionContext) _Company_users(ctx context.Context, field graphql.Co
 	return ec.marshalNUser2ᚕᚖgitᚗmaxtroughearᚗdevᚋmaxᚗtroughearᚋdigitalᚑtimesheetᚋgoᚑserverᚋormᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Company_domains(ctx context.Context, field graphql.CollectedField, obj *model.Company) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Company",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp := ec._fieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Company().Domains(rctx, obj)
+	})
+
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1497,7 +1568,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateUser(rctx, args["code"].(string), args["email"].(string), args["password"].(string))
+			return ec.resolvers.Mutation().CreateUser(rctx, args["code"].(*string), args["email"].(string), args["password"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			perm, err := ec.unmarshalNString2string(ctx, "User:Create")
@@ -1529,6 +1600,68 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	res := resTmp.(*model.User)
 	fc.Result = res
 	return ec.marshalOUser2ᚖgitᚗmaxtroughearᚗdevᚋmaxᚗtroughearᚋdigitalᚑtimesheetᚋgoᚑserverᚋormᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteUser_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp := ec._fieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteUser(rctx, args["id"].(hide.ID))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			perm, err := ec.unmarshalNString2string(ctx, "User:Delete")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPerm == nil {
+				return nil, errors.New("directive hasPerm is not implemented")
+			}
+			return ec.directives.HasPerm(ctx, nil, directive0, perm)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_version(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3192,6 +3325,20 @@ func (ec *executionContext) _Company(ctx context.Context, sel ast.SelectionSet, 
 				}
 				return res
 			})
+		case "domains":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Company_domains(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3255,6 +3402,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
+		case "deleteUser":
+			out.Values[i] = ec._Mutation_deleteUser(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

@@ -12,5 +12,6 @@ extend type Query {
 }
 
 extend type Mutation {
-  createUser(code: String!, email: String!, password: String!): User @hasPerm(perm: "User:Create")
+  createUser(code: String, email: String!, password: String!): User @hasPerm(perm: "User:Create")
+  deleteUser(id: ID!): Boolean! @hasPerm(perm: "User:Delete")
 }
