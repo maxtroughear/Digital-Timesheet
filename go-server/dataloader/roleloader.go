@@ -21,7 +21,7 @@ func newRoleByUserIDLoader(db *gorm.DB) *generated.RoleLoader {
 				{
 					var builtinRoles []model.BuiltinRole
 					err := db.Model(&model.User{
-						ModelSoftDelete: model.ModelSoftDelete{
+						SoftDelete: model.SoftDelete{
 							ID: hide.ID(key),
 						},
 					}).Preload("Permissions").Related(&builtinRoles, "BuiltinRoles").Error
@@ -38,7 +38,7 @@ func newRoleByUserIDLoader(db *gorm.DB) *generated.RoleLoader {
 				var customRoles []*model.CustomRole
 				{
 					err := db.Model(&model.User{
-						ModelSoftDelete: model.ModelSoftDelete{
+						SoftDelete: model.SoftDelete{
 							ID: hide.ID(key),
 						},
 					}).Preload("Permissions").Related(&customRoles, "CustomRoles").Error

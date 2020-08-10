@@ -9,8 +9,8 @@ import (
 	"github.com/emvi/hide"
 )
 
-// ModelSoftDelete Default model structure with soft deleting
-type ModelSoftDelete struct {
+// SoftDelete Default model structure with soft deleting
+type SoftDelete struct {
 	ID        hide.ID `gorm:"type: bigserial;primary_key" json:"id"` // int64
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -25,7 +25,7 @@ type Model struct {
 }
 
 // IDstring returns the ID as a hash string
-func (m ModelSoftDelete) IDstring() string {
+func (m SoftDelete) IDstring() string {
 	id, err := hide.ToString(m.ID)
 	if err != nil || id == "null" {
 		return ""
@@ -34,7 +34,7 @@ func (m ModelSoftDelete) IDstring() string {
 }
 
 // IDint returns the ID as an int64
-func (m ModelSoftDelete) IDint() int64 {
+func (m SoftDelete) IDint() int64 {
 	return int64(m.ID)
 }
 

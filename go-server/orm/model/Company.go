@@ -4,7 +4,7 @@ package model
 
 // Company model
 type Company struct {
-	ModelSoftDelete
+	SoftDelete
 	Code    string `gorm:"unique_index:idx_code"`
 	Name    string
 	Users   []User

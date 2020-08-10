@@ -22,7 +22,6 @@ func RequiredUsers(db *gorm.DB) {
 	db.Where(model.Domain{
 		Domain:    "kiwisheets.com",
 		CompanyID: company.ID,
-		Company:   company,
 	}).FirstOrCreate(&domain)
 
 	// TODO: make default password configurable via env variables

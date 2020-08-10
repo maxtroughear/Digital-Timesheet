@@ -59,7 +59,7 @@ func newUsersByCompanyIDLoader(db *gorm.DB) *generated.UserSliceLoader {
 
 			for i, companyID := range companyIDs {
 				err := db.Model(model.Company{
-					ModelSoftDelete: model.ModelSoftDelete{
+					SoftDelete: model.SoftDelete{
 						ID: hide.ID(companyID),
 					},
 				}).Related(&companyUsers[i]).Error

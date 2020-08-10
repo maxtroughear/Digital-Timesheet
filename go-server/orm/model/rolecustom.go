@@ -10,7 +10,7 @@ import (
 
 // CustomRole is a group of permissions that is created for a specific company
 type CustomRole struct {
-	ModelSoftDelete
+	SoftDelete
 	Name        string
 	Description string
 	CompanyID   hide.ID
