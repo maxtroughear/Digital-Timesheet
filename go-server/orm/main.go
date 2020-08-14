@@ -19,6 +19,7 @@ func Init(cfg *util.ServerConfig) *gorm.DB {
 	connectionString := constructConnectionString(&dbCfg)
 
 	db, err := gorm.Open("postgres", connectionString)
+	db.BlockGlobalUpdate(true)
 
 	if err != nil {
 		log.Println("Failed to connect to db")
