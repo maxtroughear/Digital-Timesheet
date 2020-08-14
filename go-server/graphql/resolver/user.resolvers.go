@@ -12,6 +12,7 @@ import (
 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/graphql/generated"
 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model"
 	"github.com/emvi/hide"
+	"github.com/jinzhu/gorm"
 )
 
 func (r *mutationResolver) CreateUser(ctx context.Context, code *string, email string, password string) (*model.User, error) {
@@ -52,7 +53,17 @@ func (r *mutationResolver) CreateUser(ctx context.Context, code *string, email s
 }
 
 func (r *mutationResolver) DeleteUser(ctx context.Context, id hide.ID) (bool, error) {
-	panic(fmt.Errorf("not implemented"))
+	if err := r.DB.Delete(&model.User{
+		SoftDelete: model.SoftDelete{
+			ID: id,
+		},
+	}).Error; err == gorm.ErrRecordNotFound {
+		return false, fmt.Errorf("User not found")
+	} else if err != nil {
+		return false, fmt.Errorf("No user specified")
+	}
+
+	return true, nil
 }
 
 func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
@@ -63,6 +74,10 @@ func (r *queryResolver) User(ctx context.Context, id hide.ID) (*model.User, erro
 	user, err := dataloader.For(ctx).UserByID.Load(int64(id))
 
 	return user, err
+}
+
+func (r *queryResolver) SearchUsers(ctx context.Context, search string) ([]*model.User, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *userResolver) Company(ctx context.Context, obj *model.User) (*model.Company, error) {

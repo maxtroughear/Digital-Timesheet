@@ -1,3 +1,4 @@
+// Package resolver holds all graphql resolvers for queries and mutations
 package resolver
 
 import (

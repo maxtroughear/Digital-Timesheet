@@ -15,13 +15,18 @@ import (
 )
 
 func (r *companyResolver) Users(ctx context.Context, obj *model.Company) ([]*model.User, error) {
-	return dataloader.For(ctx).UsersByCompanyID.Load(int64(obj.ID))
+	return dataloader.For(ctx).UsersByCompanyID.Load(obj.IDint())
 }
 
 func (r *companyResolver) Domains(ctx context.Context, obj *model.Company) ([]string, error) {
-	// dataloader.For(ctx).DomainsByCompanyID
+	domains, errs := dataloader.For(ctx).DomainsByCompanyID.Load(obj.IDint())
 
-	return make([]string, 0), nil
+	domainStrings := make([]string, len(domains))
+	for i, domain := range domains {
+		domainStrings[i] = domain.Domain
+	}
+
+	return domainStrings, errs
 }
 
 func (r *mutationResolver) CreateCompany(ctx context.Context, name string, code string) (*model.Company, error) {

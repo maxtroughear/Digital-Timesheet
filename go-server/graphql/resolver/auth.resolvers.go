@@ -8,34 +8,23 @@ import (
 	"fmt"
 
 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/auth"
+	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/dataloader"
 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/graphql/generated"
 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/graphql/modelgen"
 	"git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model"
+	"github.com/jinzhu/gorm"
 )
 
 func (r *mutationResolver) Login(ctx context.Context, email string, password string, twoFactor *string) (*modelgen.AuthData, error) {
 	// TODO: move logic into auth package
 
-	//company, err := dataloader.For(ctx).CompanyByCode.Load(code)
+	user, err := dataloader.For(ctx).UserByEmail.Load(email)
 
-	// if err != nil || company == nil {
-	// 	return nil, fmt.Errorf("Company not found")
-	// }
-
-	// unique query so not using a dataloader
-
-	// TODO: Use a dataloader
-
-	var user model.User
-	if err := r.DB.Where(&model.User{
-		Email: email,
-		// CompanyID: company.ID,
-	}).Preload("Company").First(&user).Error; err != nil {
+	if err != nil || user == nil {
 		return nil, fmt.Errorf("Email or Password Incorrect")
 	}
-	//user.Company = *company
 
-	if !auth.VerifyPassword(&user, password) {
+	if !auth.VerifyPassword(user, password) {
 		return nil, fmt.Errorf("Email or Password Incorrect")
 	}
 
@@ -52,16 +41,20 @@ func (r *mutationResolver) Login(ctx context.Context, email string, password str
 		if !auth.VerifyTwoFactor(&twoFA, *twoFactor) {
 			return nil, fmt.Errorf("Invalid 2FA code")
 		}
+	} else if err != gorm.ErrRecordNotFound {
+		// internal error
+		// TODO: Log this
+		return nil, fmt.Errorf("Internal 2FA Error")
 	}
 
-	token, err := auth.LoginUser(&user, &r.Cfg.JWT)
+	token, err := auth.LoginUser(user, &r.Cfg.JWT)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Email of Password Incorrect")
 	}
 
 	return &modelgen.AuthData{
-		User:             &user,
+		User:             user,
 		Token:            &token,
 		TwoFactorEnabled: twoFA.Secret != "",
 	}, nil

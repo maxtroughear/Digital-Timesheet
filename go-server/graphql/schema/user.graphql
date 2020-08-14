@@ -1,6 +1,6 @@
 type User {
   id: ID!
-	company: Company!
+	company: Company! @goField(forceResolver: true)
 	email: String!
   firstname: String!
   lastname: String!
@@ -9,6 +9,7 @@ type User {
 extend type Query {
   me: User! @hasPerm(perm: "Me:Read")
   user(id: ID!): User! @hasPerm(perm: "User:Read")
+  searchUsers(search: String!): [User!]! @hasPerm(perm: "Users:Read")
 }
 
 extend type Mutation {
