@@ -96,7 +96,6 @@
       "diagnostics": true,
       "documentLink": false
     },
-    "go.buildOnSave": "off",
     "cSpell.words": [
       "CHOKIDAR",
       "Deduplication",
@@ -135,5 +134,6 @@
       "unmount",
       "vektah"
     ],
+    "go.autocompleteUnimportedPackages": true,
   },
 }
