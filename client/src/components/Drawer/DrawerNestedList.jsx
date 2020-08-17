@@ -36,7 +36,7 @@ const NestedDrawerList = (props) => {
 
   const onClick = useContext(Context);
 
-  const [open, setOpen] = useStickyState(false);
+  const [open, setOpen] = useStickyState(false, `drawer-nested-${text}`);
 
   const handleExpandClick = () => {
     setOpen(!open);
