@@ -8,4 +8,4 @@ RUN chmod +x ./wait-for-it.sh
 
 EXPOSE 80
 
-CMD [ "./wait-for-it.sh", "api:3000", "--", "nginx", "-g", "daemon off;" ]
+CMD [ "./wait-for-it.sh", "file:3000", "--", "nginx", "-g", "daemon off;" ]

@@ -13,6 +13,10 @@
       "path": "go-server"
     },
     {
+      "name": "File Server",
+      "path": "file-server"
+    },
+    {
       "name": "Reverse-Proxy",
       "path": "reverse-proxy"
     },
@@ -27,9 +31,13 @@
   ],
   "settings": {
     "eslint.format.enable": true,
+    "eslint.validate": [
+      "typescript",
+      "typescriptreact"
+    ],
     "eslint.workingDirectories": [
       "client",
-      "node-server"
+      "file-server"
     ],
     "editor.codeActionsOnSaveTimeout": 3000,
     "go.useLanguageServer": true,
@@ -103,6 +111,7 @@
       "Inbox",
       "PGDATA",
       "Vert",
+      "cfworker",
       "chartjs",
       "clsx",
       "dataloaden",

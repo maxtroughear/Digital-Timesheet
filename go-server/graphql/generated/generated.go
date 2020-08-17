@@ -541,7 +541,7 @@ type Query {
 `, BuiltIn: false},
 	{Name: "graphql/schema/user.graphql", Input: `type User {
   id: ID!
-	company: Company! @goField(forceResolver: true)
+	company: Company! @goField(forceResolver: true) @hasPerm(perm: "Company:Read")
 	email: String!
   firstname: String!
   lastname: String!
@@ -2271,8 +2271,32 @@ func (ec *executionContext) _User_company(ctx context.Context, field graphql.Col
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp := ec._fieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Company(rctx, obj)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.User().Company(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			perm, err := ec.unmarshalNString2string(ctx, "Company:Read")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasPerm == nil {
+				return nil, errors.New("directive hasPerm is not implemented")
+			}
+			return ec.directives.HasPerm(ctx, obj, directive0, perm)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Company); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *git.maxtroughear.dev/max.troughear/digital-timesheet/go-server/orm/model.Company`, tmp)
 	})
 
 	if resTmp == nil {

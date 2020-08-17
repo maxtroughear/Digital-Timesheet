@@ -51,6 +51,26 @@ services:
 
 # file proxy server
 
+  file:
+    image: registry.maxtroughear.dev/max.troughear/digital-timesheet/master-file:edge
+    networks:
+      - cloud-edge
+    deploy:
+      replicas: 1
+      labels:
+        traefik.enable: 'true'
+        traefik.docker.network: cloud-edge
+        traefik.http.routers.dts-edge-file-http.rule: HostRegexp(`beta.kiwisheets.com`) && PathPrefix(`/files/`)
+        traefik.http.routers.dts-edge-file-http.entrypoints: http
+        traefik.http.routers.dts-edge-file-http.middlewares: https-redirect
+        traefik.http.routers.dts-edge-file-https.rule: HostRegexp(`beta.kiwisheets.com`) && PathPrefix(`/files/`)
+        traefik.http.routers.dts-edge-file-https.entrypoints: https
+        traefik.http.routers.dts-edge-file-https.tls: 'true'
+        traefik.http.routers.dts-edge-file-https.tls.certresolver: ledns
+        traefik.http.routers.dts-edge-file-https.tls.domains[0].main: '*.beta.kiwisheets.com'
+        traefik.http.routers.dts-edge-file-https.tls.domains[0].sans: beta.kiwisheets.com
+        traefik.http.services.dts-edge-file.loadbalancer.server.port: '3000'
+
   frontend:
     image: registry.maxtroughear.dev/max.troughear/digital-timesheet/master-frontend:edge
     networks:

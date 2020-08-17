@@ -1,6 +1,6 @@
 type User {
   id: ID!
-	company: Company! @goField(forceResolver: true)
+	company: Company! @goField(forceResolver: true) @hasPerm(perm: "Company:Read")
 	email: String!
   firstname: String!
   lastname: String!

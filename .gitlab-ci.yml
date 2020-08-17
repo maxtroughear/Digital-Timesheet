@@ -100,6 +100,12 @@ build-api:
     BUILD_DIR: "go-server"
     BUILD_NAME: "api"
 
+build-file:
+  extends: .build
+  variables:
+    BUILD_DIR: "file-server"
+    BUILD_NAME: "file"
+
 review:
   stage: review
   extends: .deploy
