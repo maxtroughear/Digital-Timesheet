@@ -9,7 +9,7 @@ const port = process.env.PORT || 3000;
 
 const app = express();
 
-app.set('trust proxy', 4);
+app.set('trust proxy', 'loopback, linklocal, uniquelocal');
 
 app.use(logger('dev'));
 app.use(express.json());
