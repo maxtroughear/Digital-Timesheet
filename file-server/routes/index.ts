@@ -18,7 +18,7 @@ router.get('/', (req, res) => {
 router.get('/ip', (req, res) => {
   res.json({
     status: 'ok',
-    ip: req.ip,
+    ips: req.ips,
   });
 });
 
