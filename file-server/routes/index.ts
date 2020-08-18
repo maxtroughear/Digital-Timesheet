@@ -15,6 +15,13 @@ router.get('/', (req, res) => {
   });
 });
 
+router.get('/ip', (req, res) => {
+  res.json({
+    status: 'ok',
+    ip: req.ip,
+  });
+});
+
 router.get('/buckets', (req, res) => {
   s3.listBuckets((err, data) => {
     if (err) {
