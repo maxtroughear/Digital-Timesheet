@@ -211,6 +211,8 @@ production:
     - curl -X POST ${SERVICE_WEBHOOK_API}
     - echo "Updating Frontend Service"
     - curl -X POST ${SERVICE_WEBHOOK_FRONTEND}
+    - echo "Updating File Service"
+    - curl -X POST ${SERVICE_WEBHOOK_FILE}
     - exit 0
 
 .stop_deploy:

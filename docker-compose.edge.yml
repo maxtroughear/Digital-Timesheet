@@ -60,6 +60,7 @@ services:
       labels:
         traefik.enable: 'true'
         traefik.docker.network: cloud-edge
+        traefik.http.middlewares.files-stripprefix.stripprefix.prefixes: '/files'
         traefik.http.routers.dts-edge-file-http.rule: HostRegexp(`beta.kiwisheets.com`) && PathPrefix(`/files/`)
         traefik.http.routers.dts-edge-file-http.entrypoints: http
         traefik.http.routers.dts-edge-file-http.middlewares: https-redirect
@@ -69,6 +70,7 @@ services:
         traefik.http.routers.dts-edge-file-https.tls.certresolver: ledns
         traefik.http.routers.dts-edge-file-https.tls.domains[0].main: '*.beta.kiwisheets.com'
         traefik.http.routers.dts-edge-file-https.tls.domains[0].sans: beta.kiwisheets.com
+        traefik.http.routers.dts-edge-file-https.middlewares: files-stripprefix
         traefik.http.services.dts-edge-file.loadbalancer.server.port: '3000'
 
   frontend:

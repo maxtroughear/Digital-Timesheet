@@ -98,6 +98,7 @@
       // "go-server": true,
       // "licenses": true,
       // "reverse-proxy": true,
+      // "file-server": true,
     },
     "go.languageServerExperimentalFeatures": {
       "format": true,
